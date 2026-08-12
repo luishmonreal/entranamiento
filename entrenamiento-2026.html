@@ -23,6 +23,14 @@
     --chart-trend:#7EA6E0; --amber-tint:rgba(242,179,61,.12); --danger-tint:rgba(229,106,84,.10);
     --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --radius:16px;
+    /* Escala tipográfica (a escala 1 equivale a los px originales) */
+    --fs-scale:1;
+    --fs-xs:calc(.78rem * var(--fs-scale));    /* ~12.5 */
+    --fs-sm:calc(.8125rem * var(--fs-scale));  /* 13 */
+    --fs-md:calc(.9375rem * var(--fs-scale));  /* 15 */
+    --fs-body:calc(1rem * var(--fs-scale));    /* 16 */
+    --fs-lg:calc(1.125rem * var(--fs-scale));  /* 18 */
+    --fs-title:calc(1.625rem * var(--fs-scale));/* 26 */
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--text);
@@ -35,7 +43,7 @@
   /* Header */
   .top{padding:calc(20px + env(safe-area-inset-top)) 18px 8px;}
   .top .fecha{color:var(--muted); font-size:13px; text-transform:capitalize; letter-spacing:.3px;}
-  .top h1{font-size:26px; margin-top:2px;}
+  .top h1{font-size:var(--fs-title); margin-top:2px;}
   .top .sub{color:var(--mint); font-size:14px; margin-top:4px; font-weight:600;}
 
   /* Day chips */
@@ -54,20 +62,20 @@
   .ej{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px;}
   .ej.done{opacity:.92; border-color:var(--mint-dark);}
   .ej-head{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
-  .ej-nombre{font-size:16px; font-weight:700; line-height:1.25;}
-  .ej-meta{color:var(--muted); font-size:13px; margin-top:3px;}
+  .ej-nombre{font-size:var(--fs-body); font-weight:700; line-height:1.25;}
+  .ej-meta{color:var(--muted); font-size:var(--fs-sm); margin-top:3px;}
   .ej-video{color:var(--mint); text-decoration:none; font-size:13px; font-weight:600;
     border:1px solid var(--mint-dark); border-radius:10px; padding:6px 10px; white-space:nowrap;}
-  .ej-tip{color:var(--amber); font-size:12.5px; margin-top:6px;}
+  .ej-tip{color:var(--amber); font-size:var(--fs-xs); margin-top:6px;}
 
   .sets{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center;}
   .set-chip{width:46px; height:46px; border-radius:50%; border:2px solid var(--line);
-    background:var(--card2); color:var(--muted); font-size:15px; font-weight:700;}
+    background:var(--card2); color:var(--muted); font-size:var(--fs-md); font-weight:700;}
   .set-chip.ok{background:var(--mint); border-color:var(--mint); color:var(--on-accent);}
 
   .carga{display:flex; gap:8px; margin-top:12px; align-items:center;}
   .carga input{width:74px; padding:10px; border-radius:10px; border:1px solid var(--line);
-    background:var(--card2); color:var(--text); font-size:15px; text-align:center;}
+    background:var(--card2); color:var(--text); font-size:var(--fs-md); text-align:center;}
   .carga label{color:var(--muted); font-size:13px;}
   .carga .mini-kg{width:40px; height:42px; border-radius:10px; border:1px solid var(--line);
     background:var(--card2); color:var(--text); font-size:19px; font-weight:800; flex:0 0 auto;}
@@ -75,7 +83,7 @@
   .carga .prev{color:var(--mint); font-size:12.5px; margin-left:auto; text-align:right;}
 
   /* Cardio card */
-  .cardio-btn{width:100%; margin-top:12px; padding:14px; border-radius:12px; font-size:16px; font-weight:700;
+  .cardio-btn{width:100%; margin-top:12px; padding:14px; border-radius:12px; font-size:var(--fs-body); font-weight:700;
     border:2px solid var(--mint-dark); background:transparent; color:var(--mint);}
   .cardio-btn.ok{background:var(--mint); color:var(--on-accent); border-color:var(--mint);}
 
@@ -117,8 +125,8 @@
   .stat-row{display:flex; gap:10px; padding:14px 14px 4px;}
   .stat{flex:1; background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
     padding:14px; text-align:center;}
-  .stat .num{font-size:26px; font-weight:800; color:var(--mint);}
-  .stat .lbl{color:var(--muted); font-size:12px; margin-top:4px;}
+  .stat .num{font-size:var(--fs-title); font-weight:800; color:var(--mint);}
+  .stat .lbl{color:var(--muted); font-size:var(--fs-xs); margin-top:4px;}
   .prog-ej{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px;}
   .prog-ej .fila{display:flex; justify-content:space-between; align-items:center;}
   .prog-ej .ult{color:var(--mint); font-weight:700; font-size:15px;}
@@ -197,7 +205,7 @@
     overflow:hidden; margin:0 8px 8px 0; background:var(--card2);}
   .set-pill .mini{width:40px; height:48px; border:none; background:transparent; color:var(--muted); font-size:20px; font-weight:800;}
   .set-pill .mini.x{width:34px; font-size:13px; color:var(--danger); border-right:1px solid var(--line);}
-  .set-pill .val{min-width:42px; height:46px; border:none; background:transparent; color:var(--text); font-size:15px; font-weight:800;}
+  .set-pill .val{min-width:42px; height:46px; border:none; background:transparent; color:var(--text); font-size:var(--fs-md); font-weight:800;}
   .set-pill.ok{border-color:var(--mint);} .set-pill.ok .val{color:var(--mint);}
   .set-pill.sup{border-color:var(--amber);} .set-pill.sup .val{color:var(--amber);}
   .set-pill.bajo{border-color:var(--danger);} .set-pill.bajo .val{color:var(--danger);}
@@ -312,6 +320,17 @@
   .tema-dots span{width:16px; height:16px; border-radius:50%; border:1px solid rgba(128,128,128,.35);}
   .tema-n{display:block; font-weight:800; font-size:14px;}
   .tema-d{display:block; font-size:11.5px; margin-top:2px; line-height:1.3;}
+
+  /* Secciones plegables (vista Datos) */
+  .sec{border-bottom:1px solid var(--line);}
+  .sec>summary{list-style:none; cursor:pointer; display:flex; align-items:center; gap:8px;
+    padding:15px 20px; color:var(--text); font-size:14px; font-weight:700; letter-spacing:.3px;
+    -webkit-tap-highlight-color:transparent;}
+  .sec>summary::-webkit-details-marker{display:none;}
+  .sec>summary::after{content:"⌄"; margin-left:auto; color:var(--muted); font-size:18px; line-height:1;
+    transition:transform .2s;}
+  .sec[open]>summary::after{transform:rotate(180deg);}
+  .sec>summary:hover{color:var(--mint);}
 
   /* Micro-animaciones de logro y guías */
   @keyframes pillPop{0%{transform:scale(.72);opacity:.4}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
@@ -439,25 +458,33 @@
     <h1>Tus datos</h1>
     <div class="sub" id="datosEstado"></div>
   </div>
-  <div class="bloque-titulo" style="margin:6px 20px 0;">Estilo · elige tu tema</div>
-  <div class="lista" id="temasBox"></div>
-  <div class="bloque-titulo" style="margin:6px 20px 0;">Preferencias · activar o desactivar</div>
-  <div class="lista" id="prefsBox"></div>
-  <div class="bloque-titulo" style="margin:6px 20px 0;">Sincronización en la nube</div>
-  <div class="lista" id="syncBox"></div>
-  <div class="bloque-titulo" style="margin:6px 20px 0;">Respaldo manual</div>
-  <div class="lista">
-    <div class="nota">Tus registros se guardan en este dispositivo. Exporta un respaldo cada cierto tiempo o para pasarlos a otro celular o computador.</div>
-    <button class="cardio-btn" onclick="exportarJSON()">⬇️ Respaldo completo (JSON)</button>
-    <button class="cardio-btn" onclick="exportarPesosCSV()">📊 Pesos para Excel/Sheets (CSV)</button>
-    <button class="cardio-btn" onclick="exportarCargasCSV()">🏋️ Cargas para Excel/Sheets (CSV)</button>
-    <button class="cardio-btn" onclick="exportarCardioCSV()">🚴 Cardio para Excel/Sheets (CSV)</button>
-    <button class="cardio-btn" onclick="exportarMedidasCSV()">📏 Medidas para Excel/Sheets (CSV)</button>
-    <div class="bloque-titulo">Restaurar</div>
-    <div class="nota">Importa un respaldo JSON exportado antes. Reemplaza todos los datos de este dispositivo.</div>
-    <input type="file" id="inImportar" accept=".json,application/json" style="display:none" onchange="importarJSON(this)">
-    <button class="cardio-btn" onclick="document.getElementById('inImportar').click()">⬆️ Importar respaldo (JSON)</button>
-  </div>
+  <details class="sec" open>
+    <summary>🎨 Estilo · elige tu tema</summary>
+    <div class="lista" id="temasBox"></div>
+  </details>
+  <details class="sec" open>
+    <summary>⚙️ Preferencias · activar o desactivar</summary>
+    <div class="lista" id="prefsBox"></div>
+  </details>
+  <details class="sec">
+    <summary>☁️ Sincronización en la nube</summary>
+    <div class="lista" id="syncBox"></div>
+  </details>
+  <details class="sec">
+    <summary>💾 Respaldo y restauración</summary>
+    <div class="lista">
+      <div class="nota">Tus registros se guardan en este dispositivo. Exporta un respaldo cada cierto tiempo o para pasarlos a otro celular o computador.</div>
+      <button class="cardio-btn" onclick="exportarJSON()">⬇️ Respaldo completo (JSON)</button>
+      <button class="cardio-btn" onclick="exportarPesosCSV()">📊 Pesos para Excel/Sheets (CSV)</button>
+      <button class="cardio-btn" onclick="exportarCargasCSV()">🏋️ Cargas para Excel/Sheets (CSV)</button>
+      <button class="cardio-btn" onclick="exportarCardioCSV()">🚴 Cardio para Excel/Sheets (CSV)</button>
+      <button class="cardio-btn" onclick="exportarMedidasCSV()">📏 Medidas para Excel/Sheets (CSV)</button>
+      <div class="bloque-titulo">Restaurar</div>
+      <div class="nota">Importa un respaldo JSON exportado antes. Reemplaza todos los datos de este dispositivo.</div>
+      <input type="file" id="inImportar" accept=".json,application/json" style="display:none" onchange="importarJSON(this)">
+      <button class="cardio-btn" onclick="document.getElementById('inImportar').click()">⬆️ Importar respaldo (JSON)</button>
+    </div>
+  </details>
 </div>
 
 <!-- Timer -->
@@ -2087,6 +2114,7 @@ function pintarTema(){
   const r=document.documentElement.style;
   for(const k in t.v) r.setProperty(k, t.v[k]);
   configurarPWA(t.v);
+  aplicarEscala();
 }
 /* PWA: barra de estado, ícono y manifest siguen el color del tema activo */
 function iconoSVG(v){
@@ -2173,12 +2201,19 @@ const PREFS_LISTA=[
   ["sugerencias","Sugerencias de progresión","Avisos de subir peso, reps o series"],
   ["descarga","Semana de descarga","Sugerencia de deload tras 2 ciclos sin avanzar"],
   ["haptics","Vibración","Confirma series y avisos con una vibración corta (si el teléfono lo permite)"],
+  ["textogrande","Texto grande","Aumenta el tamaño de la letra en toda la app", true],  // opt-in: por defecto apagado
 ];
+/* true en la 4ª posición = preferencia opt-in (apagada por defecto) */
+function prefValor(k, optIn){ return optIn ? !!(D&&D.prefs&&D.prefs[k]===true) : pref(k); }
+function aplicarEscala(){
+  const on=!!(D&&D.prefs&&D.prefs.textogrande===true);
+  document.documentElement.style.setProperty('--fs-scale', on?'1.15':'1');
+}
 function setPref(k, val){ if(!D.prefs) D.prefs={}; D.prefs[k]=val; guardar(); renderPrefs(); refrescarVista(); }
 function renderPrefs(){
   const box=document.getElementById("prefsBox"); if(!box) return;
-  box.innerHTML=PREFS_LISTA.map(([k,t,d])=>{
-    const on=pref(k);
+  box.innerHTML=PREFS_LISTA.map(([k,t,d,optIn])=>{
+    const on=prefValor(k, optIn);
     return `<div class="pref-row"><div><div class="pref-t">${t}</div><div class="pref-d">${d}</div></div>`+
       `<button class="switch ${on?'on':''}" role="switch" aria-checked="${on}" onclick="setPref('${k}', ${on?'false':'true'})"><span class="knob"></span></button></div>`;
   }).join("");
