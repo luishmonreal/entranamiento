@@ -2,8 +2,18 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Entrenamiento 2026</title>
+<meta name="description" content="Tu plan de entrenamiento 2026: fuerza, cardio, peso y progresiones.">
+<meta name="theme-color" id="metaTheme" content="#121714">
+<meta name="color-scheme" content="dark light">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Entrenamiento">
+<link rel="icon" id="appIcon">
+<link rel="apple-touch-icon" id="appTouchIcon">
+<link rel="manifest" id="appManifest">
 <style>
   :root{
     --bg:#121714; --card:#1B2320; --card2:#232D28; --line:#2E3A34;
@@ -23,7 +33,7 @@
   button{font-family:inherit;}
 
   /* Header */
-  .top{padding:20px 18px 8px;}
+  .top{padding:calc(20px + env(safe-area-inset-top)) 18px 8px;}
   .top .fecha{color:var(--muted); font-size:13px; text-transform:capitalize; letter-spacing:.3px;}
   .top h1{font-size:26px; margin-top:2px;}
   .top .sub{color:var(--mint); font-size:14px; margin-top:4px; font-weight:600;}
@@ -437,11 +447,11 @@
 </div>
 
 <!-- Timer -->
-<div id="timerBar">
+<div id="timerBar" role="timer" aria-live="polite" aria-atomic="true">
   <div class="t" id="timerNum">0:00</div>
   <div class="lbl" id="timerLbl">Pausa</div>
-  <button onclick="timerMas30()">+30s</button>
-  <button onclick="timerStop()">Listo</button>
+  <button onclick="timerMas30()" aria-label="Sumar 30 segundos al descanso">+30s</button>
+  <button onclick="timerStop()" aria-label="Terminar el descanso">Listo</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1060,14 +1070,14 @@ function renderHoy(){
       const v=arr[i];
       if(hecho(v)){
         const cl=claseSet(v,r), n=numVal(v,r), fuego=(n>=r.high)?" 🔥":"";
-        setsHtml+=`<span class="set-pill ${cl}">`+
-          `<button class="mini x" onclick="resetSet('${id}',${i})" title="Reiniciar serie">✕</button>`+
-          `<button class="mini" onclick="ajustarRep('${id}',${i},${-r.paso})">−</button>`+
-          `<button class="val" onclick="ajustarRep('${id}',${i},${r.paso})">${n}${fuego}</button>`+
-          `<button class="mini" onclick="ajustarRep('${id}',${i},${r.paso})">＋</button>`+
+        setsHtml+=`<span class="set-pill ${cl}" role="group" aria-label="Serie ${i+1}: ${n} repeticiones">`+
+          `<button class="mini x" onclick="resetSet('${id}',${i})" title="Reiniciar serie" aria-label="Reiniciar serie ${i+1}">✕</button>`+
+          `<button class="mini" onclick="ajustarRep('${id}',${i},${-r.paso})" aria-label="Quitar una repetición a la serie ${i+1}">−</button>`+
+          `<button class="val" onclick="ajustarRep('${id}',${i},${r.paso})" aria-label="Serie ${i+1}, ${n} repeticiones, sumar una">${n}${fuego}</button>`+
+          `<button class="mini" onclick="ajustarRep('${id}',${i},${r.paso})" aria-label="Sumar una repetición a la serie ${i+1}">＋</button>`+
         `</span>`;
       } else {
-        setsHtml+=`<button class="set-chip" onclick="marcarSet('${id}',${i})">${i+1}</button>`;
+        setsHtml+=`<button class="set-chip" onclick="marcarSet('${id}',${i})" aria-label="Marcar serie ${i+1} como hecha">${i+1}</button>`;
       }
     }
 
@@ -1193,8 +1203,9 @@ function marcarSet(id, i){
   guardar();
   const esHoyReal = diaVista===new Date().getDay() && semanaOffset===0;
   const faltan=ns - arr.filter(hecho).length;
-  if(faltan>0){ if(esHoyReal) iniciarTimer(e.p, e.n+" · pausa antes de la serie "+(arr.filter(hecho).length+1)); }
+  if(faltan>0){ vibrar(12); if(esHoyReal) iniciarTimer(e.p, e.n+" · pausa antes de la serie "+(arr.filter(hecho).length+1)); }
   else {
+    vibrar([14,45,14]);
     timerStop(); toast("✓ "+e.n+" completado"); registrarCargaSiHay(id);
     expandidos.delete(id); // la tarjeta se colapsa sola al completarse
   }
@@ -1220,9 +1231,21 @@ function ajustarRep(id, i, delta){
   const e=EJERCICIOS[id], r=rango(e);
   const arr=ses.sets[id] || (ses.sets[id]=Array(numSeries(id)).fill(false));
   let v = numVal(arr[i], r) + delta;
-  arr[i] = v<1 ? false : v;
+  if(v<1){ arr[i]=false; guardar(); renderHoy(); return; } // baja de 1 rep → la serie vuelve a estar sin marcar
+  arr[i]=v;
   guardar();
-  renderHoy();
+  // Actualización puntual del pill: evita reconstruir toda la lista y saltos de scroll
+  const card=document.getElementById("card_"+id);
+  const wrap=card && card.querySelector(".sets");
+  const pill=wrap && wrap.children[i];
+  if(pill && pill.classList.contains("set-pill")){
+    const val=pill.querySelector(".val");
+    if(val) val.innerHTML = v + (v>=r.high ? " 🔥" : "");
+    pill.className = "set-pill " + claseSet(v, r);
+    vibrar(6);
+  } else {
+    renderHoy();
+  }
 }
 /* Cardio: minutos e intensidad por sesión */
 const CARDIO_MIN_DEF=30;                       // sesiones de 30 min por defecto
@@ -1315,8 +1338,12 @@ function iniciarTimer(seg, lbl, onDone, finMsg){
   tickTimer();
   timerInt=setInterval(tickTimer, 250);
 }
+/* Vibración corta de confirmación (respeta la preferencia y el soporte del equipo) */
+function vibrar(patron){
+  if(pref('haptics') && navigator.vibrate){ try{ navigator.vibrate(patron); }catch(e){} }
+}
 function beep(){
-  if(navigator.vibrate) navigator.vibrate([200,100,200]);
+  vibrar([200,100,200]);
   try{
     const ctx=new (window.AudioContext||window.webkitAudioContext)();
     const o=ctx.createOscillator(), g=ctx.createGain();
@@ -1974,7 +2001,7 @@ const TEMAS={
     "--mint":"#4CC3F7","--mint-dark":"#1E6FA8","--amber":"#FBBF24","--danger":"#F87171",
     "--on-accent":"#04141F","--on-amber":"#251A02","--tabs-bg":"#070D18","--hm-lp":"#16394C","--chart-trend":"#A78BFA"})},
   amanecer:{n:"Amanecer", d:"claro y cálido, acento coral", v:temaV({
-    "--bg":"#FAF6F0","--card":"#FFFFFF","--card2":"#F2EDE4","--line":"#E6DFD2","--text":"#2B2620","--muted":"#8B8175",
+    "--bg":"#FAF6F0","--card":"#FFFFFF","--card2":"#F2EDE4","--line":"#E6DFD2","--text":"#2B2620","--muted":"#6E6357",
     "--mint":"#E85D3D","--mint-dark":"#C24326","--amber":"#2A9D8F","--danger":"#C0392B",
     "--on-accent":"#FFFFFF","--on-amber":"#FFFFFF","--tabs-bg":"#FFFFFF","--hm-lp":"#F3C5B8","--chart-trend":"#7C6FD0"})},
   neon:{n:"Neón nocturno", d:"púrpura + magenta, synthwave", v:temaV({
@@ -1998,7 +2025,7 @@ const TEMAS={
     "--mint":"#E7C36A","--mint-dark":"#A98B34","--amber":"#E78A3C","--danger":"#E56A54",
     "--on-accent":"#1A1205","--on-amber":"#221000","--tabs-bg":"#090805","--hm-lp":"#40371F","--chart-trend":"#9CB4FF"})},
   sakura:{n:"Sakura", d:"claro rosado, suave y vivo", v:temaV({
-    "--bg":"#FDF4F7","--card":"#FFFFFF","--card2":"#F7E9EF","--line":"#F0DAE3","--text":"#372B31","--muted":"#9C8390",
+    "--bg":"#FDF4F7","--card":"#FFFFFF","--card2":"#F7E9EF","--line":"#F0DAE3","--text":"#372B31","--muted":"#7C6472",
     "--mint":"#EC4899","--mint-dark":"#C2337B","--amber":"#8B5CF6","--danger":"#DC2626",
     "--on-accent":"#FFFFFF","--on-amber":"#FFFFFF","--tabs-bg":"#FFFFFF","--hm-lp":"#F6C8DD","--chart-trend":"#38BDF8"})},
   terminal:{n:"Terminal", d:"retro hacker, verde fosforescente", v:temaV({
@@ -2007,7 +2034,7 @@ const TEMAS={
     "--on-accent":"#001905","--on-amber":"#241800","--tabs-bg":"#000000","--hm-lp":"#123A1C","--chart-trend":"#33CCFF",
     "--font":FONT_MONO})},
   hielo:{n:"Hielo", d:"claro azulado, fresco y limpio", v:temaV({
-    "--bg":"#F0F6FA","--card":"#FFFFFF","--card2":"#E5EEF5","--line":"#D7E3EC","--text":"#1E2A33","--muted":"#74868F",
+    "--bg":"#F0F6FA","--card":"#FFFFFF","--card2":"#E5EEF5","--line":"#D7E3EC","--text":"#1E2A33","--muted":"#5C6C74",
     "--mint":"#0284C7","--mint-dark":"#026395","--amber":"#0D9488","--danger":"#DC2626",
     "--on-accent":"#FFFFFF","--on-amber":"#FFFFFF","--tabs-bg":"#FFFFFF","--hm-lp":"#BFDCEE","--chart-trend":"#7C6FD0"})},
 };
@@ -2016,6 +2043,56 @@ function pintarTema(){
   const t=TEMAS[temaKey()];
   const r=document.documentElement.style;
   for(const k in t.v) r.setProperty(k, t.v[k]);
+  configurarPWA(t.v);
+}
+/* PWA: barra de estado, ícono y manifest siguen el color del tema activo */
+function iconoSVG(v){
+  const bg=v["--card"]||"#121714", ac=v["--mint"]||"#8FD8B0";
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">'+
+    '<rect width="512" height="512" rx="112" fill="'+bg+'"/>'+
+    '<g fill="'+ac+'">'+
+    '<rect x="92" y="168" width="44" height="176" rx="16"/>'+
+    '<rect x="136" y="208" width="36" height="96" rx="14"/>'+
+    '<rect x="172" y="238" width="168" height="36" rx="18"/>'+
+    '<rect x="340" y="208" width="36" height="96" rx="14"/>'+
+    '<rect x="376" y="168" width="44" height="176" rx="16"/>'+
+    '</g></svg>';
+}
+function aplicarIconos(uri, tipo, v){
+  const ic=document.getElementById("appIcon"); if(ic) ic.href=uri;
+  const tic=document.getElementById("appTouchIcon"); if(tic) tic.href=uri;
+  const bg=v["--bg"]||"#121714";
+  const manifest={
+    name:"Entrenamiento 2026", short_name:"Entrena",
+    display:"standalone", orientation:"portrait", start_url:".", scope:".",
+    background_color:bg, theme_color:bg,
+    icons:[{src:uri, sizes:"512x512", type:tipo, purpose:"any maskable"}]
+  };
+  const ml=document.getElementById("appManifest");
+  if(ml) ml.href="data:application/manifest+json,"+encodeURIComponent(JSON.stringify(manifest));
+}
+let _pwaTema=null;
+function configurarPWA(v){
+  const meta=document.getElementById("metaTheme");
+  if(meta) meta.setAttribute("content", v["--bg"]||"#121714");
+  const k=temaKey();
+  if(k===_pwaTema) return;   // ícono y manifest solo se regeneran al cambiar de tema
+  _pwaTema=k;
+  const svg=iconoSVG(v);
+  const svgUri="data:image/svg+xml,"+encodeURIComponent(svg);
+  // Intenta un PNG (mejor soporte iOS/instalación); si falla, usa el SVG
+  try{
+    const img=new Image();
+    img.onload=function(){
+      try{
+        const cv=document.createElement("canvas"); cv.width=cv.height=512;
+        cv.getContext("2d").drawImage(img,0,0,512,512);
+        aplicarIconos(cv.toDataURL("image/png"), "image/png", v);
+      }catch(e){ aplicarIconos(svgUri, "image/svg+xml", v); }
+    };
+    img.onerror=function(){ aplicarIconos(svgUri, "image/svg+xml", v); };
+    img.src=svgUri;
+  }catch(e){ aplicarIconos(svgUri, "image/svg+xml", v); }
 }
 function setTema(k){
   if(!TEMAS[k]) return;
@@ -2052,6 +2129,7 @@ const PREFS_LISTA=[
   ["tecnica","Técnica paso a paso","Guía de técnica desplegable en cada ejercicio"],
   ["sugerencias","Sugerencias de progresión","Avisos de subir peso, reps o series"],
   ["descarga","Semana de descarga","Sugerencia de deload tras 2 ciclos sin avanzar"],
+  ["haptics","Vibración","Confirma series y avisos con una vibración corta (si el teléfono lo permite)"],
 ];
 function setPref(k, val){ if(!D.prefs) D.prefs={}; D.prefs[k]=val; guardar(); renderPrefs(); refrescarVista(); }
 function renderPrefs(){
