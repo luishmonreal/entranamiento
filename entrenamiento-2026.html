@@ -1,0 +1,2461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrenamiento 2026</title>
+<style>
+  :root{
+    --bg:#121714; --card:#1B2320; --card2:#232D28; --line:#2E3A34;
+    --text:#EDF3EE; --muted:#93A69B; --mint:#8FD8B0; --mint-dark:#3E8A66;
+    --amber:#F2B33D; --danger:#E56A54;
+    --on-accent:#0E1512; --on-amber:#231A05; --tabs-bg:#0D1210; --hm-lp:#2E4A3B;
+    --chart-trend:#7EA6E0; --amber-tint:rgba(242,179,61,.12); --danger-tint:rgba(229,106,84,.10);
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --radius:16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text);
+    font-family:var(--font);
+    font-size:16px;}
+  body{padding-bottom:140px;}
+  h1,h2,h3{margin:0; font-weight:700;}
+  button{font-family:inherit;}
+
+  /* Header */
+  .top{padding:20px 18px 8px;}
+  .top .fecha{color:var(--muted); font-size:13px; text-transform:capitalize; letter-spacing:.3px;}
+  .top h1{font-size:26px; margin-top:2px;}
+  .top .sub{color:var(--mint); font-size:14px; margin-top:4px; font-weight:600;}
+
+  /* Day chips */
+  .dias{display:flex; gap:6px; padding:14px 18px 6px; overflow-x:auto;}
+  .dia-chip{flex:1; min-width:40px; padding:10px 0; border-radius:12px; border:1px solid var(--line);
+    background:transparent; color:var(--muted); font-size:13px; font-weight:600; text-align:center;}
+  .dia-chip.hoy{border-color:var(--mint-dark);}
+  .dia-chip.activo{background:var(--mint); color:var(--on-accent); border-color:var(--mint);}
+  .dia-chip .pto{display:block; font-size:10px; line-height:1; margin-top:3px; color:var(--mint);}
+  .dia-chip.activo .pto{color:var(--on-accent);}
+
+  /* Cards */
+  .lista{padding:10px 14px; display:flex; flex-direction:column; gap:10px;}
+  .bloque-titulo{color:var(--muted); font-size:12px; font-weight:700; letter-spacing:1.2px;
+    text-transform:uppercase; margin:10px 6px 0;}
+  .ej{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px;}
+  .ej.done{opacity:.92; border-color:var(--mint-dark);}
+  .ej-head{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .ej-nombre{font-size:16px; font-weight:700; line-height:1.25;}
+  .ej-meta{color:var(--muted); font-size:13px; margin-top:3px;}
+  .ej-video{color:var(--mint); text-decoration:none; font-size:13px; font-weight:600;
+    border:1px solid var(--mint-dark); border-radius:10px; padding:6px 10px; white-space:nowrap;}
+  .ej-tip{color:var(--amber); font-size:12.5px; margin-top:6px;}
+
+  .sets{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center;}
+  .set-chip{width:46px; height:46px; border-radius:50%; border:2px solid var(--line);
+    background:var(--card2); color:var(--muted); font-size:15px; font-weight:700;}
+  .set-chip.ok{background:var(--mint); border-color:var(--mint); color:var(--on-accent);}
+
+  .carga{display:flex; gap:8px; margin-top:12px; align-items:center;}
+  .carga input{width:74px; padding:10px; border-radius:10px; border:1px solid var(--line);
+    background:var(--card2); color:var(--text); font-size:15px; text-align:center;}
+  .carga label{color:var(--muted); font-size:13px;}
+  .carga .prev{color:var(--mint); font-size:12.5px; margin-left:auto; text-align:right;}
+
+  /* Cardio card */
+  .cardio-btn{width:100%; margin-top:12px; padding:14px; border-radius:12px; font-size:16px; font-weight:700;
+    border:2px solid var(--mint-dark); background:transparent; color:var(--mint);}
+  .cardio-btn.ok{background:var(--mint); color:var(--on-accent); border-color:var(--mint);}
+
+  .nota{background:var(--card); border:1px dashed var(--line); border-radius:var(--radius);
+    padding:14px; color:var(--muted); font-size:14px; line-height:1.5;}
+  .nota b{color:var(--text);}
+
+  .resumen-dia{margin:4px 18px 0; background:var(--card2); border-radius:12px; padding:10px 14px;
+    display:flex; justify-content:space-between; color:var(--muted); font-size:13px;}
+  .resumen-dia b{color:var(--mint); font-weight:700;}
+
+  /* Implementos */
+  .imps{display:flex; flex-wrap:wrap; gap:6px; padding:10px 18px 0;}
+  .imp-chip{background:var(--card2); border:1px solid var(--line); border-radius:999px;
+    padding:6px 12px; font-size:13px; color:var(--text);}
+
+  /* Timer bar */
+  #timerBar{position:fixed; left:12px; right:12px; bottom:84px; background:var(--amber); color:var(--on-amber);
+    border-radius:16px; padding:12px 16px; display:none; align-items:center; gap:14px; z-index:40;
+    box-shadow:0 8px 24px rgba(0,0,0,.45);}
+  #timerBar.on{display:flex;}
+  #timerBar .t{font-size:30px; font-weight:800; font-variant-numeric:tabular-nums; min-width:86px;}
+  #timerBar .lbl{font-size:13px; font-weight:600; flex:1; line-height:1.2;}
+  #timerBar button{border:none; background:var(--on-amber); color:var(--amber); border-radius:10px;
+    padding:8px 12px; font-weight:700; font-size:13px;}
+
+  /* Tabs */
+  .tabs{position:fixed; bottom:0; left:0; right:0; display:flex; background:var(--tabs-bg);
+    border-top:1px solid var(--line); z-index:50; padding-bottom:env(safe-area-inset-bottom);}
+  .tab{flex:1; padding:12px 0 14px; background:none; border:none; color:var(--muted);
+    font-size:12px; font-weight:600;}
+  .tab .ic{display:block; font-size:20px; margin-bottom:2px;}
+  .tab.on{color:var(--mint);}
+
+  .vista{display:none;}
+  .vista.on{display:block;}
+
+  /* Progreso */
+  .stat-row{display:flex; gap:10px; padding:14px 14px 4px;}
+  .stat{flex:1; background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px; text-align:center;}
+  .stat .num{font-size:26px; font-weight:800; color:var(--mint);}
+  .stat .lbl{color:var(--muted); font-size:12px; margin-top:4px;}
+  .prog-ej{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px;}
+  .prog-ej .fila{display:flex; justify-content:space-between; align-items:center;}
+  .prog-ej .ult{color:var(--mint); font-weight:700; font-size:15px;}
+  .prog-hist{margin-top:10px; border-top:1px solid var(--line); padding-top:8px; display:none;}
+  .prog-hist.on{display:block;}
+  .prog-hist .h-row{display:flex; justify-content:space-between; color:var(--muted); font-size:13.5px; padding:4px 0;}
+  .prog-hist .h-row b{color:var(--text);}
+
+  /* Peso */
+  .peso-form{display:flex; gap:8px; padding:14px; align-items:center;}
+  .peso-form input{flex:1; padding:13px; border-radius:12px; border:1px solid var(--line);
+    background:var(--card); color:var(--text); font-size:17px; text-align:center;}
+  .peso-form button{padding:13px 18px; border-radius:12px; border:none; background:var(--mint);
+    color:var(--on-accent); font-weight:800; font-size:15px;}
+  canvas{width:100%; display:block;}
+  .peso-lista{padding:0 14px;}
+  .peso-row{display:flex; justify-content:space-between; padding:9px 4px; border-bottom:1px solid var(--line);
+    font-size:14.5px;}
+  .peso-row .var-b{color:var(--mint); font-weight:700;}
+  .peso-row .var-m{color:var(--danger); font-weight:700;}
+  .peso-row .cat{color:var(--muted); font-size:13px;}
+  .chart-card{margin:0 14px; background:var(--card); border:1px solid var(--line);
+    border-radius:var(--radius); padding:14px;}
+
+  /* Racha / días entrenando */
+  .racha{margin:8px 0 0; display:inline-flex; align-items:center; gap:6px; background:var(--card2);
+    border:1px solid var(--mint-dark); border-radius:999px; padding:6px 12px; font-size:13px; color:var(--text);}
+  .racha b{color:var(--mint); font-size:15px;}
+
+  /* Barra de progreso de la sesión */
+  .prog-wrap{margin:8px 18px 0;}
+  .prog-bar{height:12px; background:var(--card2); border:1px solid var(--line); border-radius:999px; overflow:hidden;}
+  .prog-fill{height:100%; width:0%; background:var(--mint); border-radius:999px; transition:width .35s ease;}
+  .prog-fill.full{background:var(--mint);}
+  .prog-pct{color:var(--muted); font-size:12px; margin-top:5px; text-align:right;}
+  .prog-pct b{color:var(--mint);}
+
+  /* Botón de aguante (plancha) */
+  .hold-btn{width:100%; margin-top:12px; padding:13px; border-radius:12px; font-size:15px; font-weight:700;
+    border:2px solid var(--amber); background:transparent; color:var(--amber);}
+  .hold-btn:active{background:var(--amber); color:var(--on-amber);}
+
+  /* Técnica por ejercicio */
+  .tec-btn{background:none; border:none; color:var(--mint); font-size:13px; font-weight:700; padding:8px 0 0; display:block;}
+  .tec-box{display:none; margin-top:8px; background:var(--card2); border-radius:10px; padding:10px 12px;
+    color:var(--muted); font-size:13px; line-height:1.6;}
+  .tec-box.on{display:block;}
+  .tec-box b{color:var(--text);}
+
+  /* Sparkline de cargas */
+  .spark{margin:4px 0 8px;}
+
+  /* Descarga */
+  .desc-sug{margin-top:12px; background:var(--danger-tint); border:1px solid var(--danger);
+    border-radius:12px; padding:12px; color:var(--danger); font-size:13.5px; line-height:1.45;}
+  .desc-sug b{color:var(--danger);}
+
+  .toast{position:fixed; top:14px; left:50%; transform:translateX(-50%); background:var(--mint);
+    color:var(--on-accent); padding:10px 18px; border-radius:12px; font-weight:700; font-size:14px;
+    z-index:60; display:none;}
+
+  /* Sincronización */
+  .sync-dot{display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--muted);
+    vertical-align:middle; margin-left:6px;}
+  .sync-dot.ok{background:var(--mint);} .sync-dot.err{background:var(--danger);} .sync-dot.pend{background:var(--amber);}
+  .code-box{background:var(--card2); border:1px dashed var(--mint-dark); border-radius:12px; padding:12px;
+    font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12.5px; word-break:break-all;
+    color:var(--text); line-height:1.55;}
+  .code-in{width:100%; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--card2);
+    color:var(--text); font-size:13px; font-family:ui-monospace,Menlo,Consolas,monospace;}
+  .row2{display:flex; gap:8px;}
+  .cardio-btn.danger{border-color:var(--danger); color:var(--danger);}
+
+  /* Series con reps */
+  .set-pill{display:inline-flex; align-items:center; border:2px solid var(--line); border-radius:999px;
+    overflow:hidden; margin:0 8px 8px 0; background:var(--card2);}
+  .set-pill .mini{width:40px; height:48px; border:none; background:transparent; color:var(--muted); font-size:20px; font-weight:800;}
+  .set-pill .mini.x{width:34px; font-size:13px; color:var(--danger); border-right:1px solid var(--line);}
+  .set-pill .val{min-width:42px; height:46px; border:none; background:transparent; color:var(--text); font-size:15px; font-weight:800;}
+  .set-pill.ok{border-color:var(--mint);} .set-pill.ok .val{color:var(--mint);}
+  .set-pill.sup{border-color:var(--amber);} .set-pill.sup .val{color:var(--amber);}
+  .set-pill.bajo{border-color:var(--danger);} .set-pill.bajo .val{color:var(--danger);}
+  .badge-sube{display:inline-block; background:var(--amber); color:var(--on-amber); border-radius:6px;
+    padding:0 6px; font-size:12px; font-weight:800; vertical-align:middle; margin-left:4px;}
+  .prog-sug{margin-top:12px; background:var(--amber-tint); border:1px solid var(--amber);
+    border-radius:12px; padding:12px; color:var(--amber); font-size:14px; line-height:1.4;}
+  .prog-sug b{color:var(--amber);}
+  .inc-in{width:66px; padding:6px; border-radius:8px; border:1px solid var(--line);
+    background:var(--card2); color:var(--text); text-align:center; font-size:14px;}
+
+  /* Calendario de progresiones (ciclos de 8 semanas) */
+  .ciclo{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px;}
+  .ciclo.actual{border-color:var(--mint-dark);}
+  .ciclo .c-head{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .ciclo .c-num{font-weight:800; font-size:15px;}
+  .ciclo .c-fechas{color:var(--muted); font-size:13px; margin-top:2px;}
+  .c-est{font-size:12px; font-weight:700; border-radius:999px; padding:4px 10px; white-space:nowrap;}
+  .c-est.done{background:var(--card2); color:var(--muted);}
+  .c-est.curso{background:var(--mint); color:var(--on-accent);}
+  .c-est.prox{background:var(--card2); color:var(--amber); border:1px solid var(--amber);}
+  .ciclo .c-body{margin-top:8px; color:var(--muted); font-size:13.5px; line-height:1.45;}
+  .ciclo .c-body b{color:var(--mint);}
+  .c-body .nvo{display:block; margin-top:6px; padding:8px 10px; background:var(--card2); border-radius:10px;
+    color:var(--text); font-size:13px; line-height:1.45;}
+  .c-body .nvo b{color:var(--mint);}
+  .c-body .nvo .det{color:var(--muted);}
+
+  /* Cardio: minutos e intensidad */
+  .cardio-min{display:flex; align-items:center; gap:8px; margin-top:10px;}
+  .cardio-min input{width:72px; padding:9px; border-radius:10px; border:1px solid var(--line);
+    background:var(--card2); color:var(--text); font-size:16px; text-align:center; font-weight:700;}
+  .cardio-min label{color:var(--muted); font-size:13px;}
+  .int-chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
+  .int-chip{background:var(--card2); border:1px solid var(--line); border-radius:999px;
+    padding:8px 12px; font-size:13px; color:var(--muted); font-weight:600;}
+  .int-chip.sel{background:var(--mint); color:var(--on-accent); border-color:var(--mint);}
+
+  /* ===== Nuevas funcionalidades ===== */
+  /* Medidas corporales: selector de zona */
+  .med-chips{display:flex; flex-wrap:wrap; gap:6px; padding:6px 18px 0;}
+  .med-chip{background:var(--card2); border:1px solid var(--line); border-radius:999px;
+    padding:8px 12px; font-size:13px; color:var(--muted); font-weight:600;}
+  .med-chip.sel{background:var(--mint); color:var(--on-accent); border-color:var(--mint);}
+  .peso-row .var-n{color:var(--muted); font-weight:700;}
+
+  /* Notas por sesión */
+  .nota-ses{width:100%; margin-top:10px; min-height:70px; resize:vertical; padding:11px 12px;
+    border-radius:12px; border:1px solid var(--line); background:var(--card2); color:var(--text);
+    font-family:inherit; font-size:14.5px; line-height:1.5;}
+  .nota-ses:focus{outline:none; border-color:var(--mint-dark);}
+
+  /* RPE */
+  .rpe-wrap{margin-top:12px; background:var(--card2); border:1px solid var(--line); border-radius:12px; padding:12px;}
+  .rpe-head{display:flex; justify-content:space-between; align-items:center; font-size:13.5px; color:var(--muted); font-weight:600;}
+  .rpe-head b{color:var(--mint); font-size:15px;}
+  .rpe-range{width:100%; margin:10px 0 4px; accent-color:var(--mint); height:26px;}
+  .rpe-scale{display:flex; justify-content:space-between; color:var(--muted); font-size:11.5px;}
+
+  /* Heatmap tipo GitHub */
+  .hm-wrap{padding:6px 14px 0; overflow-x:auto;}
+  .hm-months{display:flex; gap:3px; margin-bottom:4px;}
+  .hm-mlabel{width:14px; flex:0 0 14px; font-size:10px; color:var(--muted); white-space:nowrap; overflow:visible;}
+  .hm-grid{display:flex; gap:3px;}
+  .hm-col{display:flex; flex-direction:column; gap:3px;}
+  .hm-cell{width:14px; height:14px; border-radius:3px; background:var(--card2); border:1px solid var(--line);}
+  .hm-cell.lp{background:var(--hm-lp);}
+  .hm-cell.l1{background:var(--mint-dark); border-color:var(--mint-dark);}
+  .hm-cell.l2{background:var(--mint); border-color:var(--mint);}
+  .hm-cell.fut{background:transparent; border-color:transparent;}
+  .hm-cell.prog{box-shadow:0 0 0 2px var(--amber); }
+  .hm-legend{display:flex; align-items:center; gap:8px; flex-wrap:wrap; color:var(--muted);
+    font-size:12px; padding:10px 18px 0;}
+  .hm-legend .sw{display:inline-block; width:13px; height:13px; border-radius:3px; vertical-align:middle;
+    border:1px solid var(--line); margin:0 2px;}
+  .hm-legend .sw.lp{background:var(--hm-lp);} .hm-legend .sw.l1{background:var(--mint-dark);}
+  .hm-legend .sw.l2{background:var(--mint);} .hm-legend .sw.prog{box-shadow:0 0 0 2px var(--amber);}
+
+  /* Preferencias: switches */
+  .pref-row{display:flex; justify-content:space-between; align-items:center; gap:12px;
+    background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px;}
+  .pref-t{font-weight:700; font-size:14.5px;}
+  .pref-d{color:var(--muted); font-size:12.5px; margin-top:2px; line-height:1.35;}
+  .switch{flex:0 0 auto; width:50px; height:30px; border-radius:999px; border:none; background:var(--line);
+    position:relative; transition:background .2s;}
+  .switch.on{background:var(--mint);}
+  .switch .knob{position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%;
+    background:var(--on-accent); transition:left .2s;}
+  .switch.on .knob{left:23px;}
+
+  /* Ajustes de usabilidad */
+  .toast-btn{margin-left:10px; border:none; background:var(--on-accent); color:var(--mint); border-radius:8px;
+    padding:6px 10px; font-weight:800; font-size:13px;}
+  .row-x{background:none; border:none; color:var(--danger); font-size:14px; font-weight:700; padding:4px 6px;}
+  .sem-btn{flex:0 0 34px; min-width:34px; padding:10px 0; border-radius:12px; border:1px solid var(--line);
+    background:transparent; color:var(--muted); font-size:15px; font-weight:800;}
+  .sem-btn:disabled{opacity:.35;}
+  .sem-aviso{margin:8px 18px 0; background:var(--amber-tint); border:1px solid var(--amber); border-radius:12px;
+    padding:8px 12px; color:var(--amber); font-size:13px; display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .sem-aviso button{border:none; background:var(--amber); color:var(--on-amber); border-radius:8px; padding:6px 10px;
+    font-weight:800; font-size:12.5px; white-space:nowrap;}
+  .fecha-in{flex:0 0 112px; width:112px; padding:11px 6px; border-radius:12px; border:1px solid var(--line);
+    background:var(--card); color:var(--muted); font-size:13px; font-family:inherit; text-align:center;}
+  .ej-colapsado{cursor:pointer;}
+  .peso-form input[type=number]{min-width:80px;}
+
+  /* Selector de temas */
+  .tema-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px;}
+  .tema-card{border:2px solid var(--line); border-radius:14px; padding:12px; text-align:left; cursor:pointer;}
+  .tema-card.sel{box-shadow:0 0 0 2px var(--mint);}
+  .tema-dots{display:flex; gap:5px; margin-bottom:8px;}
+  .tema-dots span{width:16px; height:16px; border-radius:50%; border:1px solid rgba(128,128,128,.35);}
+  .tema-n{display:block; font-weight:800; font-size:14px;}
+  .tema-d{display:block; font-size:11.5px; margin-top:2px; line-height:1.3;}
+</style>
+</head>
+<body>
+
+<!-- ============ VISTA HOY ============ -->
+<div id="vHoy" class="vista on">
+  <div class="top">
+    <div class="fecha" id="fechaHoy"></div>
+    <h1 id="tituloDia"></h1>
+    <div class="sub" id="focoDia"></div>
+    <div class="racha" id="rachaHoy"></div>
+    <div class="racha" id="progFechaHoy" style="margin-left:6px"></div>
+  </div>
+  <div class="sem-aviso" id="semAviso" style="display:none"><span id="semAvisoTxt"></span><button onclick="volverHoy()">Volver a hoy</button></div>
+  <div class="resumen-dia" id="resumenDia"></div>
+  <div class="prog-wrap" id="progWrap">
+    <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+    <div class="prog-pct" id="progPct"></div>
+  </div>
+  <div class="imps" id="impsDia"></div>
+  <div class="dias" id="diasChips"></div>
+  <div class="lista" id="listaEjercicios"></div>
+</div>
+
+<!-- ============ VISTA PROGRESO ============ -->
+<div id="vProg" class="vista">
+  <div class="top">
+    <div class="fecha">Progresión</div>
+    <h1>Tu avance</h1>
+  </div>
+  <div class="stat-row">
+    <div class="stat"><div class="num" id="stSemana">0/6</div><div class="lbl">sesiones esta semana</div></div>
+    <div class="stat"><div class="num" id="stTotal">0</div><div class="lbl">sesiones totales</div></div>
+    <div class="stat"><div class="num" id="stPeso">—</div><div class="lbl">kg perdidos</div></div>
+  </div>
+  <div class="stat-row" style="padding-top:0;">
+    <div class="stat"><div class="num" id="stTon">—</div><div class="lbl">kg movidos esta semana (tonelaje)</div></div>
+    <div class="stat"><div class="num" id="stTonPrev">—</div><div class="lbl">semana pasada</div></div>
+  </div>
+
+  <div id="heatmapSec">
+    <div class="bloque-titulo" style="margin:16px 20px 0;">Mapa de actividad · últimos 12 meses</div>
+    <div class="hm-wrap" id="heatmapBox"></div>
+    <div class="hm-legend">
+      <span><span class="sw"></span> sin sesión</span>
+      <span><span class="sw lp"></span> incompleta</span>
+      <span><span class="sw l1"></span> completa</span>
+      <span><span class="sw l2"></span> hice de más</span>
+      <span><span class="sw prog"></span> con progresión</span>
+    </div>
+  </div>
+
+  <div id="e1rmSec">
+    <div class="bloque-titulo" style="margin:16px 20px 0;">Fuerza estimada · 1RM (Epley)</div>
+    <div class="stat-row" id="e1rmBox"></div>
+  </div>
+
+  <div class="bloque-titulo" style="margin:16px 20px 0;">Calendario de progresiones · cada 8 semanas</div>
+  <div class="lista" id="listaCiclos"></div>
+  <div class="bloque-titulo" style="margin:16px 20px 0;">Cargas por ejercicio</div>
+  <div class="lista" id="listaProg"></div>
+</div>
+
+<!-- ============ VISTA PESO ============ -->
+<div id="vPeso" class="vista">
+  <div class="top">
+    <div class="fecha">Control semanal</div>
+    <h1>Peso corporal</h1>
+    <div class="sub" id="pesoResumen"></div>
+  </div>
+  <div class="peso-form">
+    <input type="number" id="inPeso" step="0.1" inputmode="decimal" placeholder="Peso (kg)">
+    <input type="date" id="inPesoFecha" class="fecha-in" title="Fecha del registro (hoy si lo dejas vacío)">
+    <button onclick="agregarPeso()">Registrar</button>
+  </div>
+  <div class="nota" style="margin:0 14px; padding:10px 14px; font-size:13px;">Para corregir un registro pasado, elige su fecha y registra el valor correcto (lo reemplaza). Con ✕ lo borras — con opción de deshacer.</div>
+  <div class="chart-card"><canvas id="chartPeso" height="220"></canvas></div>
+  <div class="nota" id="pesoTendencia" style="margin:10px 14px 0;"></div>
+  <div class="bloque-titulo" style="margin:16px 20px 6px;">Cintura · control semanal</div>
+  <div class="peso-form" style="padding-top:6px;">
+    <input type="number" id="inCintura" step="0.5" inputmode="decimal" placeholder="Cintura (cm)">
+    <input type="date" id="inCinturaFecha" class="fecha-in" title="Fecha del registro (hoy si lo dejas vacío)">
+    <button onclick="agregarCintura()">Registrar</button>
+  </div>
+  <div id="cinturaBox" style="display:none">
+    <div class="chart-card"><canvas id="chartCintura" height="80" class="spark"></canvas></div>
+    <div class="peso-lista" id="listaCintura" style="margin-top:6px;"></div>
+  </div>
+  <div class="nota" id="cinturaNota" style="margin:10px 14px 0;">Mídete la cintura a la altura del ombligo, 1 vez por semana en ayunas. Si entrenas fuerza y la cintura baja aunque la pesa no se mueva, estás cambiando grasa por músculo — vas bien.</div>
+
+  <div id="medidasCorpSec">
+    <div class="bloque-titulo" style="margin:16px 20px 6px;">Medidas corporales</div>
+    <div class="med-chips" id="medChips"></div>
+    <div class="peso-form" style="padding-top:8px;">
+      <input type="number" id="inMedCorp" step="0.5" inputmode="decimal" placeholder="Medida de hoy (cm)">
+      <input type="date" id="inMedFecha" class="fecha-in" title="Fecha del registro (hoy si lo dejas vacío)">
+      <button onclick="agregarMedidaCorp()">Registrar</button>
+    </div>
+    <div id="medCorpBox" style="display:none">
+      <div class="chart-card"><canvas id="chartMedCorp" height="80" class="spark"></canvas></div>
+      <div class="peso-lista" id="listaMedCorp" style="margin-top:6px;"></div>
+    </div>
+    <div class="nota" id="medHint" style="margin:10px 14px 0;"></div>
+  </div>
+
+  <div class="bloque-titulo" style="margin:16px 20px 6px;">Últimos registros</div>
+  <div class="peso-lista" id="listaPeso"></div>
+</div>
+
+<!-- ============ VISTA DATOS ============ -->
+<div id="vDatos" class="vista">
+  <div class="top">
+    <div class="fecha">Respaldo</div>
+    <h1>Tus datos</h1>
+    <div class="sub" id="datosEstado"></div>
+  </div>
+  <div class="bloque-titulo" style="margin:6px 20px 0;">Estilo · elige tu tema</div>
+  <div class="lista" id="temasBox"></div>
+  <div class="bloque-titulo" style="margin:6px 20px 0;">Preferencias · activar o desactivar</div>
+  <div class="lista" id="prefsBox"></div>
+  <div class="bloque-titulo" style="margin:6px 20px 0;">Sincronización en la nube</div>
+  <div class="lista" id="syncBox"></div>
+  <div class="bloque-titulo" style="margin:6px 20px 0;">Respaldo manual</div>
+  <div class="lista">
+    <div class="nota">Tus registros se guardan en este dispositivo. Exporta un respaldo cada cierto tiempo o para pasarlos a otro celular o computador.</div>
+    <button class="cardio-btn" onclick="exportarJSON()">⬇️ Respaldo completo (JSON)</button>
+    <button class="cardio-btn" onclick="exportarPesosCSV()">📊 Pesos para Excel/Sheets (CSV)</button>
+    <button class="cardio-btn" onclick="exportarCargasCSV()">🏋️ Cargas para Excel/Sheets (CSV)</button>
+    <button class="cardio-btn" onclick="exportarCardioCSV()">🚴 Cardio para Excel/Sheets (CSV)</button>
+    <button class="cardio-btn" onclick="exportarMedidasCSV()">📏 Medidas para Excel/Sheets (CSV)</button>
+    <div class="bloque-titulo">Restaurar</div>
+    <div class="nota">Importa un respaldo JSON exportado antes. Reemplaza todos los datos de este dispositivo.</div>
+    <input type="file" id="inImportar" accept=".json,application/json" style="display:none" onchange="importarJSON(this)">
+    <button class="cardio-btn" onclick="document.getElementById('inImportar').click()">⬆️ Importar respaldo (JSON)</button>
+  </div>
+</div>
+
+<!-- Timer -->
+<div id="timerBar">
+  <div class="t" id="timerNum">0:00</div>
+  <div class="lbl" id="timerLbl">Pausa</div>
+  <button onclick="timerMas30()">+30s</button>
+  <button onclick="timerStop()">Listo</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab on" id="tabHoy" onclick="verVista('Hoy')"><span class="ic">🏋️</span>Hoy</button>
+  <button class="tab" id="tabProg" onclick="verVista('Prog')"><span class="ic">📈</span>Progresión</button>
+  <button class="tab" id="tabPeso" onclick="verVista('Peso')"><span class="ic">⚖️</span>Peso</button>
+  <button class="tab" id="tabDatos" onclick="verVista('Datos')"><span class="ic">💾</span>Datos</button>
+</div>
+
+<script>
+/* ================ PLAN (desde tu planilla) ================ */
+const EJERCICIOS = {
+  // Lunes — Empuje
+  fpecho:{n:"Flexiones pecho (tabla azul)", imp:"Tabla push-up", s:4, r:"10–14", p:90, tip:"Cuerpo recto, baja 3 s", v:"https://youtu.be/IODxDxX7oi4", carga:false},
+  fpies:{n:"Flexiones pies elevados", imp:"Tabla + apoyo pies", s:4, r:"8–12", p:90, tip:"Core firme", v:"https://youtu.be/Eh00_rniF8E", carga:false},
+  press:{n:"Press suelo mancuernas", imp:"Mancuernas", s:3, r:"10", p:75, tip:"Pausa breve en el suelo", v:"https://youtu.be/6kALZikXxLc", carga:true},
+  ftri:{n:"Flexiones tríceps (tabla verde)", imp:"Tabla push-up", s:3, r:"8–10", p:75, tip:"Codos cerrados", v:"https://youtu.be/0326dy_-CzM", carga:false},
+  exttri:{n:"Extensión tríceps overhead", imp:"Mancuerna", s:4, r:"12–15", p:60, tip:"Codo fijo", v:"https://youtu.be/YbX7Wd8jQ-Q", carga:true},
+  plancha:{n:"Plancha", imp:"Peso corporal", s:3, r:"60 s", p:30, tip:"Ombligo adentro", v:"https://youtu.be/ASdvN_XEl_c", carga:false},
+  // Miércoles — Tirón
+  remoZ:{n:"Remo barra Z", imp:"Barra Z", s:4, r:"8–10", p:90, tip:"Espalda neutra", v:"https://youtu.be/vT2GjY_Umpw", carga:true},
+  remo1:{n:"Remo mancuerna 1 brazo", imp:"Mancuerna", s:3, r:"10 c/l", p:75, tip:"Pausa arriba", v:"https://youtu.be/pYcpY20QaE8", carga:true},
+  fesp:{n:"Flexiones espalda (tabla azul)", imp:"Tabla push-up", s:3, r:"8–10", p:75, tip:"Escápulas activas", v:"https://youtu.be/ZBULX8c9D0E", carga:false},
+  pull:{n:"Pullover mancuerna", imp:"Mancuerna", s:3, r:"12", p:60, tip:"Control total", v:"https://youtu.be/FK4rHfWKEac", carga:true},
+  curl:{n:"Curl bíceps barra Z", imp:"Barra Z", s:4, r:"10", p:60, tip:"Sin balanceo", v:"https://youtu.be/kwG2ipFRgfo", carga:true},
+  // Viernes — Pierna / hombro / core
+  sent:{n:"Sentadilla mancuernas", imp:"Mancuernas", s:4, r:"10–12", p:90, tip:"Rodillas alineadas", v:"https://youtu.be/U3HlEF_E9fo", carga:true},
+  zanc:{n:"Zancadas controladas", imp:"Mancuernas", s:3, r:"10 c/p", p:75, tip:"Paso medio", v:"https://youtu.be/QOVaHwm-Q6U", carga:true},
+  pmr:{n:"Peso muerto rumano barra Z", imp:"Barra Z", s:4, r:"8–10", p:90, tip:"Cadera atrás", v:"https://youtu.be/2SHsk9AzdjA", carga:true},
+  puente:{n:"Puente de glúteos", imp:"Peso corporal / mancuerna", s:3, r:"12–15", p:75, tip:"Aprieta arriba", v:"https://youtu.be/wPM8icPu6H8", carga:true},
+  fhom:{n:"Flexiones hombros (tabla amarillo)", imp:"Tabla push-up", s:3, r:"8–10", p:75, tip:"No arquear", v:"https://youtu.be/tJrdJBWBu08", carga:false},
+  latr:{n:"Elevaciones laterales", imp:"Mancuernas", s:4, r:"12", p:60, tip:"Sin balanceo", v:"https://youtu.be/3VcKaXpzqRo", carga:true},
+  elevp:{n:"Elevaciones piernas", imp:"Peso corporal", s:3, r:"12", p:45, tip:"Lumbar al suelo", v:"https://youtu.be/JB2oyawG9KI", carga:false},
+  plat:{n:"Plancha lateral", imp:"Peso corporal", s:3, r:"30 s c/l", p:30, tip:"Cadera alta", v:"https://youtu.be/K2VljzCC16g", carga:false},
+  // ===== Nuevos ejercicios: se suman solos al plan en la fecha de cada progresión (campo "desde") =====
+  phom:{n:"Press hombros mancuernas", imp:"Mancuernas", s:3, r:"8–10", p:90, tip:"De pie o sentado, sube vertical sin arquear la espalda",
+    v:"https://www.youtube.com/results?search_query=press+hombros+mancuernas+de+pie", carga:true,
+    desde:"2026-09-07", ini:"Parte con 6–8 kg por mano (deja ~2 reps en reserva)"},
+  gem:{n:"Elevación de talones (gemelos)", imp:"Mancuernas", s:4, r:"12–15", p:60, tip:"Sube al máximo y baja lento 3 s; usa un escalón para más rango",
+    v:"https://www.youtube.com/results?search_query=elevacion+de+talones+con+mancuernas", carga:true,
+    desde:"2026-09-07", ini:"Parte con 10–15 kg (mancuernas a los costados)"},
+  bulg:{n:"Sentadilla búlgara", imp:"Mancuernas + silla", s:3, r:"8–10 c/p", p:90, tip:"Pie trasero sobre la silla, torso apenas inclinado",
+    v:"https://www.youtube.com/results?search_query=sentadilla+bulgara+mancuernas", carga:true,
+    desde:"2026-11-02", ini:"Parte solo con peso corporal; luego 6–8 kg por mano"},
+  martillo:{n:"Curl martillo", imp:"Mancuernas", s:3, r:"10–12", p:60, tip:"Palmas enfrentadas, codos pegados al cuerpo",
+    v:"https://www.youtube.com/results?search_query=curl+martillo+mancuernas", carga:true,
+    desde:"2026-11-02", ini:"Usa por brazo ≈ la mitad de tu curl con barra Z"},
+  fondos:{n:"Fondos en silla (tríceps)", imp:"Silla firme", s:3, r:"8–12", p:90, tip:"Codos hacia atrás, hombros lejos de las orejas",
+    v:"https://www.youtube.com/results?search_query=fondos+de+triceps+en+banco", carga:false,
+    desde:"2026-12-28"},
+  superman:{n:"Superman (lumbares)", imp:"Peso corporal", s:3, r:"12–15", p:45, tip:"Sube brazos y piernas a la vez, mantén 1 s arriba",
+    v:"https://www.youtube.com/results?search_query=ejercicio+superman+lumbares", carga:false,
+    desde:"2026-12-28"},
+};
+/* Lotes de ejercicios nuevos por progresión (para el calendario) */
+const NUEVOS_POR_PROG=[
+  {ids:["phom","gem"],        motivo:"vacíos del plan: sin empuje vertical de hombro el lunes y sin trabajo de gemelos"},
+  {ids:["bulg","martillo"],   motivo:"trabajo unilateral de pierna (equilibrio/glúteo) y variación de bíceps con agarre neutro"},
+  {ids:["fondos","superman"], motivo:"más volumen de tríceps sin tabla y refuerzo lumbar para equilibrar el core"},
+];
+
+/* ===== Técnica detallada por ejercicio (puntos clave + errores comunes) ===== */
+const TECNICA = {
+  fpecho:["Manos al ancho de hombros, dedos apuntando adelante","Baja en 3 s hasta casi tocar la tabla; codos a ~45° del cuerpo","Cuerpo en línea recta: aprieta glúteos y abdomen todo el tiempo","<b>Error común:</b> cadera caída o cuello adelantado"],
+  fpies:["Igual que la flexión normal, pero con los pies elevados: más trabajo de pecho superior y hombro","No dejes caer la cadera; el abdomen firme sostiene la línea","Si cuesta mucho, baja la altura del apoyo"],
+  press:["Espalda, cabeza y ambos pies apoyados","Baja hasta que los codos toquen suave el suelo, pausa 1 s, sube sin rebotar","Muñecas rectas sobre los codos","<b>Error común:</b> arquear la lumbar para empujar más"],
+  ftri:["Manos juntas bajo el pecho (agarre estrecho)","Codos pegados al cuerpo durante todo el recorrido","Baja lento; el tríceps trabaja en la bajada también"],
+  exttri:["Mancuerna sobre la cabeza tomada con ambas manos","Solo se mueve el antebrazo: el codo queda fijo apuntando arriba","No dejes que los codos se abran hacia afuera","<b>Error común:</b> arquear la espalda al bajar el peso"],
+  plancha:["Antebrazos justo bajo los hombros","Aprieta glúteos y abdomen; ombligo adentro","Ni cola arriba ni lumbar caída: línea recta de cabeza a talones","Respira normal, no aguantes el aire"],
+  remoZ:["Bisagra de cadera: torso inclinado ~45°, espalda neutra","Lleva la barra hacia el ombligo, no al pecho","Aprieta las escápulas 1 s arriba","<b>Error común:</b> dar impulso con el torso"],
+  remo1:["Mano y rodilla apoyadas en la silla; espalda plana como mesa","Codo pegado al cuerpo, sube la mancuerna hacia la cadera","Pausa 1 s arriba; baja en 2–3 s","<b>Error común:</b> rotar el torso para subir más peso"],
+  fesp:["Escápulas activas: júntalas atrás antes de cada repetición","Rango completo y controlado","No encojas los hombros hacia las orejas"],
+  pull:["Acostado, mancuerna con ambas manos sobre el pecho","Baja detrás de la cabeza con codos apenas flectados hasta sentir el estiramiento del dorsal","Vuelve controlado","<b>Error común:</b> arquear la lumbar al bajar"],
+  curl:["Codos fijos a los costados: no se adelantan","Sube sin balancear el torso; baja en 2–3 s","Muñecas firmes, sin quebrarlas","<b>Error común:</b> usar impulso de cadera"],
+  sent:["Pies al ancho de hombros, puntas levemente afuera","Baja como sentándote hacia atrás, pecho arriba","Rodillas siguen la dirección de las puntas de los pies","Profundidad: muslos paralelos al suelo (o lo que permita tu movilidad)"],
+  zanc:["Paso medio: ni muy corto ni muy largo","La rodilla trasera baja cerca del suelo; torso vertical","Empuja con el talón de la pierna delantera para volver","<b>Error común:</b> rodilla delantera que se va hacia adentro"],
+  pmr:["Rodillas apenas flectadas y fijas; el movimiento es de cadera","Empuja la cadera atrás con la barra pegada a las piernas","Espalda neutra siempre; siente el estiramiento en femorales","Sube apretando glúteos, sin tirar con la lumbar"],
+  puente:["Talones cerca de la cola, pies firmes","Sube hasta alinear rodilla–cadera–hombro","Aprieta glúteos 1–2 s arriba","<b>Error común:</b> hiperextender la lumbar al subir de más"],
+  fhom:["Posición de pica: cadera bien alta, cabeza entre los brazos","Baja la coronilla hacia el suelo flectando los codos a ~45°","Empuja de vuelta sin arquear la espalda"],
+  latr:["Codos apenas flectados y fijos","Sube hasta la altura de los hombros, no más","El meñique nunca más alto que el pulgar","<b>Error común:</b> dar impulso con las piernas o el torso"],
+  elevp:["Lumbar pegada al suelo durante todo el ejercicio","Baja las piernas solo hasta donde la lumbar no se despegue","Sube con control, sin impulso"],
+  plat:["Codo justo bajo el hombro","Cuerpo en línea; cadera alta, que no cuelgue","No rotes el torso hacia el suelo","Respira normal"],
+  phom:["De pie con abdomen firme (o sentado con respaldo)","Sube vertical hasta estirar los brazos sin bloquear los codos","Antebrazos verticales durante todo el recorrido","<b>Error común:</b> arquear la lumbar para empujar"],
+  gem:["Sube al máximo y aguanta 1 s arriba","Baja en 3 s, con rango completo (usa un escalón)","Rodillas estiradas para enfocar el gemelo"],
+  bulg:["Empeine del pie trasero sobre la silla","~80% del peso en la pierna delantera","Torso apenas inclinado adelante; rodilla alineada con la punta del pie","<b>Error común:</b> paso muy corto (la rodilla se va muy adelante)"],
+  martillo:["Palmas enfrentadas (agarre neutro) todo el recorrido","Codos pegados al cuerpo, sin balanceo","Baja en 2–3 s"],
+  fondos:["Manos al borde de la silla, dedos hacia adelante","Codos hacia atrás, no abiertos a los lados","Baja hasta ~90° de codo; hombros lejos de las orejas","<b>Error común:</b> hundir los hombros al bajar"],
+  superman:["Boca abajo, sube brazos y piernas a la vez","Mirada al suelo: cuello neutro, sin hiperextender","Mantén 1 s arriba y baja con control"],
+};
+
+const PLAN = {
+  1:{titulo:"Lunes · Empuje", foco:"Pecho, hombro, tríceps y core", ej:["fpecho","fpies","press","phom","ftri","fondos","exttri","plancha"], cardio:45, cardioIntDef:"Ritmo liviano",
+     cardioNota:"Ritmo conversable"},
+  2:{titulo:"Martes · Cardio suave", foco:"Bicicleta + estiramientos", ej:[], cardio:45, cardioIntDef:"Ritmo liviano",
+     cardioNota:"Suave. Al terminar: 10 min de estiramientos (cuádriceps, femorales, espalda baja, dorsales) · 20–30 s por zona, sin rebotes."},
+  3:{titulo:"Miércoles · Tirón", foco:"Espalda, bíceps y lumbares", ej:["remoZ","remo1","fesp","pull","curl","martillo","superman"], cardio:45, cardioIntDef:"Normal",
+     cardioNota:"Respiración estable"},
+  4:{titulo:"Jueves · Cardio + movilidad", foco:"Bicicleta + movilidad", ej:[], cardio:45, cardioIntDef:"Normal",
+     cardioNota:"Suave–media, ritmo cómodo, respiración nasal. Luego 10–15 min de movilidad: hombros → cadera → columna (gato–vaca, rotaciones suaves)."},
+  5:{titulo:"Viernes · Pierna y hombro", foco:"Pierna, glúteo, hombro y core", ej:["sent","zanc","bulg","pmr","puente","fhom","latr","gem","elevp","plat"], cardio:45, cardioIntDef:"Ritmo liviano",
+     cardioNota:"Suave"},
+  6:{titulo:"Sábado · Cardio liviano", foco:"Bici suave para recuperar", ej:[], cardio:30, cardioIntDef:"Ritmo liviano",
+     cardioNota:"Recuperación activa: bici liviana por defecto (o trote suave si prefieres), ritmo bien conversable. Si el cuerpo pide descanso total, sáltalo sin culpa."},
+  0:{titulo:"Domingo · Descanso", foco:"Recuperación", ej:[], cardio:0},
+};
+
+/* ================= DATOS ================= */
+const ALTURA = 1.65; // según IMC de tu planilla
+const OBJETIVO = 75; // kg — "falta 4,0" en tu planilla
+
+const PESOS_INICIALES = [
+["2025-10-29",101],["2025-11-05",96.4],["2025-11-12",94.1],["2025-11-19",92.2],["2025-11-26",91.1],
+["2025-12-03",90.1],["2025-12-10",89],["2025-12-17",87.8],["2025-12-24",87.5],["2025-12-31",85.6],
+["2026-01-07",84.4],["2026-01-14",84],["2026-01-21",83.9],["2026-01-28",81.9],["2026-02-04",81.7],
+["2026-02-11",80.5],["2026-02-18",80],["2026-02-25",79.6],["2026-03-04",79.4],["2026-03-11",79.7],
+["2026-03-18",79.05],["2026-03-25",79.9],["2026-04-01",79.4],["2026-04-08",79],["2026-04-15",79],
+["2026-04-22",78.85],["2026-04-29",78.5],["2026-05-06",78.4],["2026-05-13",78.05],["2026-05-20",78.4],
+["2026-05-27",78.4],["2026-06-03",78.4],["2026-06-10",78.4],["2026-06-17",78.25],["2026-06-24",78.25],
+["2026-07-01",79],["2026-07-08",79]
+];
+
+let D = null; // estado global
+const D_DEFAULT = () => ({
+  pesos: PESOS_INICIALES.map(x=>({d:x[0], kg:x[1]})),
+  sesiones:{},          // "2026-08-10": {sets:{fpecho:[reps o true,..]}, cardio:true}
+  cargas:{},            // fpecho: [{d, kg}]
+  ultCarga:{},          // fpecho: kg
+  seriesExtra:{},       // fpecho: nº de series extra sumadas por progresión
+  incremento:{},        // fpecho: cuánto subir (kg) al progresar
+  aplicado:{},          // fpecho: fecha de la última sugerencia aplicada
+  pospuesto:{},         // fpecho: fecha de la última sugerencia pospuesta
+  medidas:[],           // [{d, cm}] cintura
+  medidasExtra:{},      // {pecho:[{d,cm}], cadera:[], brazo:[], muslo:[]}
+  prefs:{},             // funcionalidades activadas/desactivadas (por defecto todas activas)
+  descarga:{}           // fpecho: {prev, hasta} semana de descarga activa
+});
+
+let guardarPend = null;
+const CLAVE="plan2026-datos";
+const enClaude = () => (typeof window.storage!=="undefined" && window.storage && typeof window.storage.get==="function");
+
+async function leerDatos(){
+  if(enClaude()){
+    try{ const r=await window.storage.get(CLAVE); return r && r.value ? JSON.parse(r.value) : null; }
+    catch(e){ return null; }
+  }
+  try{ const s=localStorage.getItem(CLAVE); return s ? JSON.parse(s) : null; }
+  catch(e){ return null; }
+}
+async function cargar(){
+  const datos = await leerDatos();
+  D = datos && datos.pesos ? datos : D_DEFAULT();
+  ["sesiones","cargas","ultCarga","seriesExtra","incremento","aplicado","pospuesto","descarga","medidasExtra","prefs"].forEach(k=>{ if(!D[k]) D[k]={}; });
+  if(!D.medidas) D.medidas=[];
+  D.progresiones = Array.from(new Set([...(D.progresiones||[]), ...PROGRESIONES_INICIALES])).sort();
+  expirarDescargas();
+  SUPA = await leerSupa();
+  sembrarHistorial();
+}
+/* Al terminar la semana de descarga, la carga vuelve sola a la anterior */
+function expirarDescargas(){
+  const hoy=hoyISO();
+  for(const id in (D.descarga||{})){
+    const dc=D.descarga[id];
+    if(dc && dc.hasta && dc.hasta<hoy){
+      if(dc.prev) D.ultCarga[id]=dc.prev;
+      delete D.descarga[id];
+    }
+  }
+}
+function guardar(){
+  D.mtime = new Date().toISOString();
+  clearTimeout(guardarPend);
+  guardarPend = setTimeout(async ()=>{
+    const s=JSON.stringify(D);
+    if(enClaude()){
+      try{ await window.storage.set(CLAVE, s); }catch(e){ console.error("No se pudo guardar", e); }
+    }
+    try{ localStorage.setItem(CLAVE, s); }catch(e){}
+  }, 400);
+  if(syncLinked() && listoParaPush) pushNube(false);
+}
+
+/* Historial real de tu planilla: todas las sesiones anteriores a hoy completadas */
+function sembrarHistorial(){
+  if(!D.sesiones) D.sesiones={};
+  const marcar=(iso, diaSem)=>{
+    if(D.sesiones[iso]) return; // nunca pisa lo que registres en la app
+    const plan=PLAN[diaSem]; const sets={};
+    plan.ej.filter(id=>ejActivo(id, iso)).forEach(id=>{ sets[id]=Array(EJERCICIOS[id].s).fill(true); });
+    D.sesiones[iso]={sets:sets, cardio:true, _seed:true};
+  };
+  const serie=(inicioISO, finISO, diaSem, saltar)=>{
+    let f=new Date(inicioISO+"T12:00:00");
+    const lim=new Date(finISO+"T12:00:00");
+    while(f<=lim){
+      const iso=f.getFullYear()+"-"+String(f.getMonth()+1).padStart(2,"0")+"-"+String(f.getDate()).padStart(2,"0");
+      if(!(saltar||[]).includes(iso)) marcar(iso, diaSem);
+      f.setDate(f.getDate()+7);
+    }
+  };
+  serie("2026-01-19","2026-08-03",1);   // lunes (empuje)
+  serie("2026-01-20","2026-08-04",2);   // martes (cardio + estiramientos)
+  serie("2026-01-21","2026-08-05",3);   // miércoles (tirón)
+  serie("2026-01-22","2026-08-06",4);   // jueves (cardio + movilidad)
+  serie("2026-01-16","2026-08-07",5);   // viernes (pierna y hombro)
+  guardar();
+}
+/* ================= UTILIDADES ================= */
+const hoyISO = () => { const t=new Date(); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); };
+const fmtFecha = iso => { const [y,m,d]=iso.split("-"); return d+"/"+m; };
+let undoFn=null;
+function toast(msg){
+  const t=document.getElementById("toast"); undoFn=null;
+  t.textContent=msg; t.style.display="block";
+  clearTimeout(t._to);
+  t._to=setTimeout(()=>t.style.display="none", 1800);
+}
+function toastUndo(msg, fn){ // toast con botón Deshacer (5 s)
+  const t=document.getElementById("toast"); undoFn=fn;
+  t.innerHTML=esc(msg)+'<button class="toast-btn" onclick="hacerUndo()">Deshacer</button>';
+  t.style.display="block";
+  clearTimeout(t._to);
+  t._to=setTimeout(()=>{ t.style.display="none"; undoFn=null; }, 5000);
+}
+function hacerUndo(){
+  const t=document.getElementById("toast");
+  if(undoFn){ const f=undoFn; undoFn=null; f(); }
+  t.style.display="none"; clearTimeout(t._to);
+}
+function isoDeDia(diaSem){ // fecha ISO del día `diaSem` (0-6) de la semana visible
+  const t=new Date(); const diff=diaSem - t.getDay() + semanaOffset*7;
+  const f=new Date(t); f.setDate(t.getDate()+diff);
+  return f.getFullYear()+"-"+String(f.getMonth()+1).padStart(2,"0")+"-"+String(f.getDate()).padStart(2,"0");
+}
+
+let diaVista = new Date().getDay();
+let semanaOffset = 0;          // 0 = semana actual; -1 = pasada…
+const expandidos = new Set();  // ejercicios completados expandidos manualmente
+
+/* ================= VISTA HOY ================= */
+function renderDias(){
+  const cont=document.getElementById("diasChips"); cont.innerHTML="";
+  const nombres=["D","L","M","X","J","V","S"];
+  const hoy=new Date().getDay();
+  const prev=document.createElement("button");
+  prev.className="sem-btn"; prev.textContent="‹"; prev.title="Semana anterior";
+  prev.onclick=()=>cambiarSemana(-1);
+  cont.appendChild(prev);
+  [1,2,3,4,5,6,0].forEach(d=>{
+    const b=document.createElement("button");
+    b.className="dia-chip"+(d===diaVista?" activo":"")+((d===hoy&&semanaOffset===0)?" hoy":"");
+    const ses=D.sesiones[isoDeDia(d)];
+    const hecho = ses && sesionCompleta(d, ses, isoDeDia(d));
+    b.innerHTML=nombres[d]+(hecho?'<span class="pto">✓</span>':'<span class="pto">&nbsp;</span>');
+    b.onclick=()=>{ diaVista=d; expandidos.clear(); renderHoy(); };
+    cont.appendChild(b);
+  });
+  const nxt=document.createElement("button");
+  nxt.className="sem-btn"; nxt.textContent="›"; nxt.title="Semana siguiente";
+  nxt.disabled=semanaOffset>=0; nxt.style.opacity=semanaOffset>=0?".35":"1";
+  nxt.onclick=()=>cambiarSemana(1);
+  cont.appendChild(nxt);
+  const av=document.getElementById("semAviso");
+  if(av){
+    if(semanaOffset<0){
+      av.style.display="flex";
+      document.getElementById("semAvisoTxt").innerHTML="📅 Viendo la semana del <b>"+fmtFecha(isoDeDia(1))+"</b> · puedes corregir registros pasados";
+    } else av.style.display="none";
+  }
+}
+function cambiarSemana(d){ semanaOffset=Math.min(0, Math.max(-104, semanaOffset+d)); expandidos.clear(); renderHoy(); }
+function volverHoy(){ semanaOffset=0; diaVista=new Date().getDay(); expandidos.clear(); renderHoy(); }
+function sesionCompleta(diaSem, ses, iso){
+  const plan=PLAN[diaSem];
+  const ejs=plan.ej.filter(id=>ejActivo(id, iso||hoyISO()));
+  if(ejs.length===0 && plan.cardio===0) return false;
+  const ejOk = ejs.every(id=>{
+    const arr=ses.sets && ses.sets[id];
+    return arr && arr.length>0 && arr.filter(hecho).length>=arr.length;
+  });
+  const cardioOk = plan.cardio===0 || ses.cardio;
+  return ejOk && cardioOk;
+}
+function getSesion(diaSem){
+  const iso=isoDeDia(diaSem);
+  if(!D.sesiones[iso]) D.sesiones[iso]={sets:{}, cardio:false};
+  return D.sesiones[iso];
+}
+
+function iconosDe(imp){
+  const out=[];
+  if(/Tabla/i.test(imp)) out.push(["🛹","Tabla push-up"]);
+  if(/apoyo pies/i.test(imp)) out.push(["🪑","Apoyo para pies"]);
+  if(/silla/i.test(imp)) out.push(["🪑","Silla firme"]);
+  if(/Mancuerna/i.test(imp)) out.push(["🏋️","Mancuernas"]);
+  if(/Barra Z/i.test(imp)) out.push(["Ⓩ","Barra Z"]);
+  if(/Peso corporal/i.test(imp)) out.push(["🧍","Peso corporal"]);
+  if(/Bicicleta/i.test(imp)) out.push(["🚴","Bicicleta estática"]);
+  return out;
+}
+
+// Cantidad de días distintos con una sesión completada (histórico + registrados)
+function diasEntrenando(){
+  let n=0;
+  for(const iso in D.sesiones){
+    const ds=new Date(iso+"T12:00:00").getDay();
+    if(PLAN[ds] && sesionCompleta(ds, D.sesiones[iso], iso)) n++;
+  }
+  return n;
+}
+// Segundos de aguante para ejercicios isométricos (plancha): "60 s", "30 s c/l"
+function segAguante(e){
+  const m=String(e.r).match(/(\d+)\s*s(\b|$)/);
+  return m ? parseInt(m[1],10) : 0;
+}
+
+/* ===== Progresión: rangos, series, sugerencias ===== */
+const DEFAULT_INC = { press:2, remoZ:2, remo1:2, exttri:1, curl:1, pull:1, latr:1, sent:2.5, zanc:2.5, pmr:2.5, puente:2.5,
+  phom:1, gem:2.5, bulg:2, martillo:1 };
+function rango(e){
+  const s=String(e.r);
+  const mt=s.match(/(\d+)\s*s/i);
+  if(mt){ const n=parseInt(mt[1],10); return {low:n, high:n+15, tiempo:true, paso:5}; }
+  const mr=s.match(/(\d+)\s*[–-]\s*(\d+)/);
+  if(mr){ return {low:parseInt(mr[1],10), high:parseInt(mr[2],10), tiempo:false, paso:1}; }
+  const mu=s.match(/(\d+)/); const n=mu?parseInt(mu[1],10):10;
+  return {low:n, high:n+2, tiempo:false, paso:1};
+}
+function hecho(v){ return v===true || (typeof v==="number" && v>0); }
+function numVal(v, r){ return typeof v==="number" ? v : (v===true ? r.low : 0); }
+function numSeries(id){ return EJERCICIOS[id].s + ((D.seriesExtra&&D.seriesExtra[id])||0); }
+function claseSet(v, r){ if(!hecho(v)) return ""; const n=numVal(v,r); if(n>r.high) return "sup"; if(n>=r.low) return "ok"; return "bajo"; }
+function esKg(id){ return !!EJERCICIOS[id].carga; }
+function incremento(id){ return (D.incremento&&D.incremento[id]!=null)?D.incremento[id]:(DEFAULT_INC[id]||1); }
+// última fecha en que TODAS las series llegaron al tope del rango
+function fechaListo(id){
+  const e=EJERCICIOS[id], r=rango(e); let best=null;
+  for(const iso in D.sesiones){
+    const day=new Date(iso+"T12:00:00").getDay();
+    if(!(PLAN[day] && PLAN[day].ej.includes(id))) continue;
+    const arr=D.sesiones[iso].sets && D.sesiones[iso].sets[id];
+    if(!arr || !arr.length) continue;
+    if(arr.every(v=> numVal(v,r) >= r.high)){ if(!best || iso>best) best=iso; }
+  }
+  return best;
+}
+/* --- Progresiones: ancladas a tus fechas reales, cada 8 semanas --- */
+const PROGRESIONES_INICIALES=["2026-03-16","2026-05-04","2026-07-13"]; // tus progresiones registradas
+const PROG_DIAS=8*7;               // 8 semanas entre progresiones
+const DIA_MS=86400000;
+const isoDe = f => f.getFullYear()+"-"+String(f.getMonth()+1).padStart(2,"0")+"-"+String(f.getDate()).padStart(2,"0");
+function sumarDias(iso, n){ const f=new Date(iso+"T12:00:00"); f.setDate(f.getDate()+n); return isoDe(f); }
+function ultimaProgISO(){ const p=D.progresiones||[]; return p.length ? p[p.length-1] : "2026-01-19"; }
+function proxProgISO(){ return sumarDias(ultimaProgISO(), PROG_DIAS); }
+function ejActivo(id, iso){ const e=EJERCICIOS[id]; return !e.desde || iso>=e.desde; }
+/* Sugerencias por RENDIMIENTO, no por calendario (doble progresión):
+   1) En cualquier momento: tope del rango en TODAS las series en 2 sesiones reales
+      seguidas → sube la carga (~2,5–5%) o, si es de peso corporal/tiempo, suma 1 serie.
+   2) En la fecha de revisión (cada 8 semanas): para lo que no progresó,
+      recuerda el objetivo de sumar reps hasta el tope (y se revisa el plan). */
+function topeConsecutivo(id){ // fecha de la 2ª sesión real consecutiva con todas las series al tope
+  const e=EJERCICIOS[id], r=rango(e);
+  const out=[];
+  Object.keys(D.sesiones).sort().forEach(iso=>{
+    const s=D.sesiones[iso];
+    if(!s || s._seed) return;
+    const day=new Date(iso+"T12:00:00").getDay();
+    if(!(PLAN[day] && PLAN[day].ej.includes(id))) return;
+    const arr=s.sets && s.sets[id];
+    if(!arr || !arr.some(hecho)) return;
+    const tope = arr.filter(hecho).length>=numSeries(id) && arr.every(v=>!hecho(v) || numVal(v,r)>=r.high);
+    out.push({iso, tope});
+  });
+  if(out.length<2) return null;
+  const a=out[out.length-2], b=out[out.length-1];
+  return (a.tope && b.tope) ? b.iso : null;
+}
+function sugerencia(id){
+  if(!ejActivo(id, hoyISO())) return null;    // aún no se suma al plan
+  const ap=(D.aplicado&&D.aplicado[id])||"", po=(D.pospuesto&&D.pospuesto[id])||"";
+  // 1) Por rendimiento: puede aparecer cualquier día
+  const perf=topeConsecutivo(id);
+  if(perf && perf>ap && perf>po){
+    if(esKg(id)){
+      const base=(D.ultCarga&&D.ultCarga[id])||0;
+      const nuevo=Math.round((base+incremento(id))*10)/10;
+      return {ready:perf, origen:"perf", tipo:"kg", nuevo,
+        texto:`tope del rango en 2 sesiones seguidas: sube la carga a <b>${nuevo} kg</b> (+${incremento(id)} ≈ 2,5–5%) y vuelve al piso del rango de reps`};
+    }
+    const r=rango(EJERCICIOS[id]);
+    return {ready:perf, origen:"perf", tipo:"serie",
+      texto:`tope${r.tiempo?" de tiempo":""} en 2 sesiones seguidas: agrega <b>1 serie</b> (más volumen)`};
+  }
+  // 2) Revisión estructural cada 8 semanas
+  const ready=proxProgISO();
+  if(hoyISO() < ready) return null;
+  if(ready<=ap || ready<=po) return null;
+  return {ready, origen:"ciclo", tipo:"reps",
+    texto:`mantén la carga y suma <b>1–2 repeticiones</b> por serie hasta el tope del rango (doble progresión)`};
+}
+/* Si ya respondiste todas las sugerencias de la revisión, se registra la progresión
+   y la próxima queda 8 semanas después. */
+function chequearProgLista(){
+  const ready=proxProgISO();
+  if(hoyISO()<ready) return;
+  if(Object.keys(EJERCICIOS).some(id=>{ const s=sugerencia(id); return s && s.origen==="ciclo"; })) return;
+  D.progresiones=D.progresiones||[];
+  if(!D.progresiones.includes(ready)){
+    D.progresiones.push(ready); D.progresiones.sort(); guardar();
+    toast("✅ Progresión registrada · próxima: "+fmtFechaA(proxProgISO()));
+  }
+}
+function aplicarProg(id){
+  const s=sugerencia(id); if(!s) return;
+  if(s.tipo==="kg"){ D.ultCarga=D.ultCarga||{}; D.ultCarga[id]=s.nuevo; toast("Nueva carga objetivo: "+s.nuevo+" kg ⬆"); }
+  else if(s.tipo==="serie"){ D.seriesExtra=D.seriesExtra||{}; D.seriesExtra[id]=(D.seriesExtra[id]||0)+1; toast("Agregada 1 serie ⬆"); }
+  else { toast("Objetivo del ciclo: +1–2 reps por serie ⬆"); }
+  D.aplicado=D.aplicado||{}; D.aplicado[id]=s.ready;
+  guardar(); chequearProgLista(); renderHoy(); if(vistaActual==="Prog") renderProg();
+}
+function posponerProg(id){
+  const s=sugerencia(id); if(!s) return;
+  D.pospuesto=D.pospuesto||{}; D.pospuesto[id]=s.ready;
+  guardar(); chequearProgLista(); renderHoy(); if(vistaActual==="Prog") renderProg();
+}
+function setIncremento(id, val){
+  const v=parseFloat(val); if(isNaN(v)||v<=0) return;
+  D.incremento=D.incremento||{}; D.incremento[id]=v; guardar(); toast("Incremento guardado");
+}
+
+/* ===== Semana de descarga (deload) =====
+   Si un ejercicio con carga lleva 2 ciclos sin llegar al tope del rango
+   (con suficientes sesiones reales registradas), se sugiere bajar ~7,5%
+   la carga por 1 semana y luego volver a la anterior automáticamente. */
+function sesionesRealesDesde(id, desdeISO){
+  let n=0;
+  for(const iso in D.sesiones){
+    const s=D.sesiones[iso];
+    if(s._seed || iso<desdeISO) continue;
+    const arr=s.sets && s.sets[id];
+    if(arr && arr.some(hecho)) n++;
+  }
+  return n;
+}
+function necesitaDescarga(id){
+  if(!esKg(id) || !ejActivo(id, hoyISO())) return false;
+  if(D.descarga && D.descarga[id]) return false;          // ya está en descarga
+  if(!(D.ultCarga && D.ultCarga[id])) return false;       // sin carga registrada
+  const regs=D.progresiones||[];
+  if(regs.length<2) return false;
+  const desde=regs[regs.length-2];                        // 2 ciclos hacia atrás
+  if(sesionesRealesDesde(id, desde)<6) return false;      // evidencia real suficiente
+  const listo=fechaListo(id);
+  return !listo || listo<desde;                           // nunca llegó al tope en 2 ciclos
+}
+function aplicarDescarga(id){
+  const kg=D.ultCarga && D.ultCarga[id]; if(!kg) return;
+  const nuevo=Math.max(1, Math.round(kg*0.925*2)/2);      // −7,5% redondeado a 0,5
+  D.descarga=D.descarga||{};
+  D.descarga[id]={prev:kg, hasta:sumarDias(hoyISO(),7)};
+  D.ultCarga[id]=nuevo;
+  guardar();
+  toast("Descarga: "+nuevo+" kg por 1 semana, luego vuelves a "+kg+" kg");
+  refrescarVista();
+}
+function cancelarDescarga(id){
+  const dc=D.descarga && D.descarga[id]; if(!dc) return;
+  if(dc.prev) D.ultCarga[id]=dc.prev;
+  delete D.descarga[id];
+  guardar(); toast("Descarga terminada, vuelves a "+dc.prev+" kg");
+  refrescarVista();
+}
+function descargaHtml(id){
+  if(!pref('descarga')) return "";
+  const dc=D.descarga && D.descarga[id];
+  if(dc) return `<div class="desc-sug">🔄 <b>Semana de descarga</b> hasta el ${fmtFechaA(dc.hasta)} · al terminar vuelves solo a <b>${dc.prev} kg</b>
+      <div class="row2" style="margin-top:8px"><button class="cardio-btn danger" onclick="cancelarDescarga('${id}')">Terminar antes</button></div></div>`;
+  if(necesitaDescarga(id)){
+    const kg=D.ultCarga[id];
+    const nuevo=Math.max(1, Math.round(kg*0.925*2)/2);
+    return `<div class="desc-sug">🔄 <b>2 ciclos sin llegar al tope del rango.</b> La ciencia sugiere una descarga: baja a <b>${nuevo} kg</b> (−7,5%) por 1 semana y vuelve a subir con más impulso.
+      <div class="row2" style="margin-top:8px">
+        <button class="cardio-btn" onclick="aplicarDescarga('${id}')">Aplicar descarga</button>
+      </div></div>`;
+  }
+  return "";
+}
+
+/* ===== Técnica: panel expandible ===== */
+function tecnicaHtml(id){
+  if(!pref('tecnica')) return "";
+  const t=TECNICA[id];
+  if(!t || !t.length) return "";
+  return `<button class="tec-btn" onclick="this.nextElementSibling.classList.toggle('on')">📖 Técnica paso a paso</button>`+
+    `<div class="tec-box">${t.map(x=>"• "+x).join("<br>")}</div>`;
+}
+
+function renderHoy(){
+  const plan=PLAN[diaVista];
+  const isoDia=isoDeDia(diaVista);
+  const ejDia=plan.ej.filter(id=>ejActivo(id, isoDia));
+  const ses=getSesion(diaVista);
+  const esHoy = diaVista===new Date().getDay() && semanaOffset===0;
+  const f=new Date(isoDia+"T12:00:00");
+  document.getElementById("fechaHoy").textContent =
+    f.toLocaleDateString("es-CL",{weekday:"long", day:"numeric", month:"long"}) + (esHoy?" · hoy":"");
+  document.getElementById("tituloDia").textContent = plan.titulo.split("·")[1] ? plan.titulo.split("·")[1].trim() : plan.titulo;
+  document.getElementById("focoDia").textContent = plan.foco;
+
+  // resumen
+  let totalSets=0, hechos=0;
+  ejDia.forEach(id=>{
+    const ns=numSeries(id);
+    totalSets+=ns;
+    const arr=ses.sets[id]||[];
+    hechos+=Math.min(arr.filter(hecho).length, ns);
+  });
+  const res=document.getElementById("resumenDia");
+  if(ejDia.length>0){
+    res.style.display="flex";
+    res.innerHTML=`<span>Series completadas</span><b>${hechos} / ${totalSets}</b>`;
+  } else res.style.display="none";
+
+  // Días entrenando (racha total)
+  const dias=diasEntrenando();
+  const rachaEl=document.getElementById("rachaHoy");
+  rachaEl.innerHTML = `🔥 <b>${dias}</b> ${dias===1?"sesión completada":"sesiones completadas"} en total`;
+
+  // Próxima progresión
+  const prox=proxProgISO();
+  const pf=document.getElementById("progFechaHoy");
+  if(hoyISO()>=prox){
+    pf.innerHTML=`⬆ <b>¡Toca progresión!</b> Revisa las sugerencias`;
+  } else {
+    const dd=Math.round((new Date(prox+"T12:00:00")-new Date(hoyISO()+"T12:00:00"))/DIA_MS);
+    pf.innerHTML=`📅 Próxima progresión: <b>${fmtFechaA(prox)}</b> · en ${dd} días`;
+  }
+
+  // Indicador de progreso de la sesión de hoy (fuerza + cardio)
+  const cardioTotal = plan.cardio>0 ? 1 : 0;
+  const cardioHecho = ses.cardio ? 1 : 0;
+  const totProg = totalSets + cardioTotal;
+  const hechProg = hechos + cardioHecho;
+  const pct = totProg ? Math.round(hechProg/totProg*100) : 0;
+  const progWrap=document.getElementById("progWrap");
+  if(totProg>0){
+    progWrap.style.display="block";
+    const fill=document.getElementById("progFill");
+    fill.style.width=pct+"%";
+    fill.classList.toggle("full", pct===100);
+    document.getElementById("progPct").innerHTML =
+      pct===100 ? `✅ <b>Sesión completa</b> · ${hechProg}/${totProg}` : `<b>${pct}%</b> de la sesión · ${hechProg}/${totProg}`;
+  } else progWrap.style.display="none";
+
+  renderDias();
+
+  // Implementos que necesitas hoy
+  const impsCont=document.getElementById("impsDia");
+  const vistos={};
+  ejDia.forEach(id=>{ iconosDe(EJERCICIOS[id].imp).forEach(x=>{ vistos[x[1]]=x[0]; }); });
+  if(plan.cardio>0) vistos["Bicicleta estática"]="🚴";
+  const nombresImp=Object.keys(vistos);
+  impsCont.innerHTML = nombresImp.length
+    ? nombresImp.map(n=>`<span class="imp-chip">${vistos[n]} ${n}</span>`).join("")
+    : "";
+
+  const cont=document.getElementById("listaEjercicios"); cont.innerHTML="";
+
+  if(ejDia.length===0 && plan.cardio===0){
+    cont.innerHTML=`<div class="nota"><b>Día de descanso.</b> El músculo crece cuando descansas. Camina, hidrátate y duerme bien. 💤</div>`;
+    return;
+  }
+
+  // Calentamiento (días de fuerza) — no cuenta para completar la sesión
+  if(ejDia.length>0 && pref('warmup')){
+    const w=document.createElement("div");
+    w.className="ej ej-warm"+(ses.warmup?" done":"");
+    w.innerHTML=`<div class="ej-nombre">🔥 Calentamiento</div>
+      <div class="ej-tip" style="margin-top:6px;">5 min de movilidad (hombros, cadera, columna) + 1–2 series livianas del primer ejercicio (≈50% de tu carga) antes de las series efectivas.</div>
+      <button class="cardio-btn ${ses.warmup?'ok':''}" onclick="toggleWarmup()">${ses.warmup?'✓ Calentamiento hecho':'Marcar calentamiento'}</button>`;
+    cont.appendChild(w);
+  }
+
+  // Ejercicios de fuerza
+  ejDia.forEach(id=>{
+    const e=EJERCICIOS[id];
+    const r=rango(e);
+    const ns=numSeries(id);
+    const arr=ses.sets[id] || (ses.sets[id]=Array(ns).fill(false));
+    while(arr.length<ns) arr.push(false);            // ajusta si se agregaron series
+    const done=arr.filter(hecho).length>=ns;
+    const sug=pref('sugerencias')?sugerencia(id):null;
+    const card=document.createElement("div");
+    card.id="card_"+id;
+    card.className="ej"+(done?" done":"");
+
+    // Tarjeta colapsada si ya está completo (toca para expandir)
+    if(done && !expandidos.has(id) && !sug){
+      const kgTxt = e.carga && D.ultCarga[id] ? " · "+D.ultCarga[id]+" kg" : "";
+      card.classList.add("ej-colapsado");
+      card.onclick=()=>{ expandidos.add(id); renderHoy(); };
+      card.innerHTML=`<div class="ej-head"><div>
+          <div class="ej-nombre">✅ ${e.n}</div>
+          <div class="ej-meta">${ns} series completadas${kgTxt} · toca para ver o editar</div>
+        </div></div>`;
+      cont.appendChild(card);
+      return;
+    }
+
+    let setsHtml="";
+    for(let i=0;i<ns;i++){
+      const v=arr[i];
+      if(hecho(v)){
+        const cl=claseSet(v,r), n=numVal(v,r), fuego=(n>=r.high)?" 🔥":"";
+        setsHtml+=`<span class="set-pill ${cl}">`+
+          `<button class="mini x" onclick="resetSet('${id}',${i})" title="Reiniciar serie">✕</button>`+
+          `<button class="mini" onclick="ajustarRep('${id}',${i},${-r.paso})">−</button>`+
+          `<button class="val" onclick="ajustarRep('${id}',${i},${r.paso})">${n}${fuego}</button>`+
+          `<button class="mini" onclick="ajustarRep('${id}',${i},${r.paso})">＋</button>`+
+        `</span>`;
+      } else {
+        setsHtml+=`<button class="set-chip" onclick="marcarSet('${id}',${i})">${i+1}</button>`;
+      }
+    }
+
+    let cargaHtml="";
+    if(e.carga){
+      const ult=D.ultCarga[id];
+      const hist=(D.cargas[id]||[]);
+      const prevTxt = hist.length ? `última: <b>${hist[hist.length-1].kg} kg</b>` : "primera vez: anota tu carga";
+      cargaHtml=`<div class="carga">
+        <label>Carga</label>
+        <input type="number" step="0.5" inputmode="decimal" value="${ult??''}" placeholder="kg"
+          onchange="setCarga('${id}', this.value)">
+        <label>kg</label>
+        <span class="prev">${prevTxt}</span>
+      </div>`;
+    }
+    const seg=segAguante(e);
+    let holdHtml="";
+    if(seg>0){
+      const lado = /c\/l/i.test(e.r) ? " (por lado)" : "";
+      holdHtml=`<button class="hold-btn" onclick="iniciarAguante('${id}')">▶ Iniciar aguante · ${seg} s${lado}</button>`;
+    }
+    const sugHtml = sug ? `<div class="prog-sug">⬆ <b>Listo para subir:</b> ${sug.texto}
+        <div class="row2" style="margin-top:8px">
+          <button class="cardio-btn" onclick="aplicarProg('${id}')">Aplicar</button>
+          <button class="cardio-btn" onclick="posponerProg('${id}')">Ahora no</button>
+        </div></div>` : "";
+    card.innerHTML=`
+      <div class="ej-head">
+        <div>
+          <div class="ej-nombre">${e.n}${sug?'<span class="badge-sube">⬆</span>':''}</div>
+          <div class="ej-meta">${iconosDe(e.imp).map(x=>x[0]).join("")} ${e.imp} · ${ns}×${e.r} · pausa ${e.p}s</div>
+        </div>
+        <a class="ej-video" href="${e.v}" target="_blank" rel="noopener">▶ Ver</a>
+      </div>
+      <div class="ej-tip">💡 ${e.tip} · <span style="color:var(--muted)">se marca con tus reps de la última sesión · ajusta con −/＋</span></div>
+      ${tecnicaHtml(id)}
+      <div class="sets">${setsHtml}</div>
+      ${holdHtml}
+      ${cargaHtml}
+      ${descargaHtml(id)}
+      ${sugHtml}`;
+    cont.appendChild(card);
+  });
+
+  // Cardio
+  if(plan.cardio>0){
+    const t=document.createElement("div");
+    t.className="bloque-titulo"; t.textContent="Cardio";
+    cont.appendChild(t);
+    const min = (ses.cardioMin!=null && ses.cardioMin>0) ? ses.cardioMin : CARDIO_MIN_DEF;
+    const inten = ses.cardioInt || plan.cardioIntDef || CARDIO_INT_DEF;
+    const tipo = ses.cardioTipo || CARDIO_TIPO_DEF;
+    const tipoIc = tipo==="Trote" ? "🏃" : "🚴";
+    const tipoChips = CARDIO_TIPOS.map(x=>
+      `<button class="int-chip ${x===tipo?'sel':''}" onclick="setCardioTipo('${x}')">${x==="Trote"?"🏃":"🚴"} ${x}</button>`).join("");
+    const chips = CARDIO_INTS.map(x=>
+      `<button class="int-chip ${x===inten?'sel':''}" onclick="setCardioInt('${x}')">${x}</button>`).join("");
+    const c=document.createElement("div");
+    c.className="ej"+(ses.cardio?" done":"");
+    c.innerHTML=`
+      <div class="ej-nombre">${tipoIc} ${tipo==="Trote"?"Trote":"Bicicleta estática"} · ${min} min · ${inten}</div>
+      <div class="ej-tip" style="margin-top:8px;">${plan.cardioNota||""}</div>
+      <div class="int-chips">${tipoChips}</div>
+      <div class="cardio-min">
+        <label>Minutos</label>
+        <input type="number" min="5" step="5" inputmode="numeric" value="${min}" onchange="setCardioMin(this.value)">
+        <label>min (sesión de ${CARDIO_MIN_DEF} por defecto)</label>
+      </div>
+      <div class="int-chips">${chips}</div>
+      <button class="cardio-btn ${ses.cardio?'ok':''}" onclick="toggleCardio()">
+        ${ses.cardio?'✓ Cardio completado · '+tipo+' · '+min+' min '+inten+(ses.rpe?' · RPE '+ses.rpe:''):'Marcar cardio completado'}</button>`;
+    cont.appendChild(c);
+  }
+
+  // RPE de la sesión completa (fuerza y/o cardio)
+  if(pref('rpe') && (ejDia.length>0 || plan.cardio>0)){
+    const rc=document.createElement("div"); rc.className="ej";
+    rc.innerHTML=`<div class="ej-nombre">💪 Esfuerzo de la sesión (RPE)</div>
+      <div class="ej-tip" style="margin-top:4px; color:var(--muted)">¿Qué tan dura fue la sesión completa? Un 8–9 sostenido varias semanas es señal de que toca descarga.</div>
+      <div class="rpe-wrap">
+        <div class="rpe-head"><span>RPE</span><b id="rpeVal">${ses.rpe?ses.rpe+' / 10':'—'}</b></div>
+        <input class="rpe-range" type="range" min="1" max="10" step="1" value="${ses.rpe||5}"
+          oninput="var e=document.getElementById('rpeVal'); if(e) e.textContent=this.value+' / 10'" onchange="setRpe(this.value)">
+        <div class="rpe-scale"><span>1 · muy suave</span><span>máximo · 10</span></div>
+      </div>`;
+    cont.appendChild(rc);
+  }
+
+  // Notas de la sesión (texto libre)
+  if(pref('notas')){
+    const nc=document.createElement("div"); nc.className="ej";
+    nc.innerHTML=`<div class="ej-nombre">📝 Notas de la sesión</div>
+      <div class="ej-tip" style="margin-top:4px; color:var(--muted)">Cómo te sentiste, molestias, sueño, energía… (se guarda al salir del campo)</div>
+      <textarea class="nota-ses" placeholder="Escribe algo sobre hoy…" onchange="setNota('${isoDia}', this.value)">${esc(ses.nota||"")}</textarea>`;
+    cont.appendChild(nc);
+  }
+}
+
+function repsPrevias(id, i){ // reps reales de tu última sesión con este ejercicio (no infla los datos)
+  const r=rango(EJERCICIOS[id]);
+  if(r.tiempo) return r.low;
+  const hoy=isoDeDia(diaVista);
+  const fechas=Object.keys(D.sesiones).sort().reverse();
+  for(const iso of fechas){
+    if(iso>=hoy) continue;
+    const s=D.sesiones[iso];
+    if(!s || s._seed) continue;
+    const arr=s.sets && s.sets[id];
+    if(!arr || !arr.some(hecho)) continue;
+    const v=(i<arr.length && hecho(arr[i])) ? arr[i] : arr.filter(hecho).pop();
+    const n=numVal(v, r);
+    if(n>0) return n;
+  }
+  return r.low; // primera vez: piso del rango (sube con ＋ si hiciste más)
+}
+function marcarSet(id, i){
+  const ses=getSesion(diaVista);
+  const e=EJERCICIOS[id], r=rango(e), ns=numSeries(id);
+  const arr=ses.sets[id] || (ses.sets[id]=Array(ns).fill(false));
+  while(arr.length<ns) arr.push(false);
+  arr[i] = repsPrevias(id, i); // por defecto tus reps de la última sesión (ajusta con −/＋)
+  guardar();
+  const esHoyReal = diaVista===new Date().getDay() && semanaOffset===0;
+  const faltan=ns - arr.filter(hecho).length;
+  if(faltan>0){ if(esHoyReal) iniciarTimer(e.p, e.n+" · pausa antes de la serie "+(arr.filter(hecho).length+1)); }
+  else {
+    timerStop(); toast("✓ "+e.n+" completado"); registrarCargaSiHay(id);
+    expandidos.delete(id); // la tarjeta se colapsa sola al completarse
+  }
+  renderHoy();
+  if(faltan===0) scrollASiguiente();
+}
+function scrollASiguiente(){
+  const prox=document.querySelector("#listaEjercicios .ej:not(.done):not(.ej-warm)");
+  if(prox) setTimeout(()=>prox.scrollIntoView({behavior:"smooth", block:"center"}), 150);
+}
+function resetSet(id, i){
+  const ses=getSesion(diaVista);
+  const arr=ses.sets[id];
+  if(!arr) return;
+  const prev=arr[i];
+  arr[i]=false;              // reinicia la serie de un toque
+  guardar();
+  renderHoy();
+  toastUndo("Serie reiniciada", ()=>{ arr[i]=prev; guardar(); renderHoy(); });
+}
+function ajustarRep(id, i, delta){
+  const ses=getSesion(diaVista);
+  const e=EJERCICIOS[id], r=rango(e);
+  const arr=ses.sets[id] || (ses.sets[id]=Array(numSeries(id)).fill(false));
+  let v = numVal(arr[i], r) + delta;
+  arr[i] = v<1 ? false : v;
+  guardar();
+  renderHoy();
+}
+/* Cardio: minutos e intensidad por sesión */
+const CARDIO_MIN_DEF=30;                       // sesiones de 30 min por defecto
+const CARDIO_INT_DEF="Normal";                 // intensidad por defecto (si el día no define otra)
+const CARDIO_INTS=["HIT","Ritmo liviano","Normal","Pesado","Muy pesado"];
+const CARDIO_TIPO_DEF="Bici";                  // tipo de cardio por defecto
+const CARDIO_TIPOS=["Bici","Trote"];
+function setCardioTipo(t){
+  const ses=getSesion(diaVista);
+  ses.cardioTipo=t;
+  guardar(); renderHoy();
+}
+function setCardioMin(val){
+  const m=parseInt(val,10);
+  const ses=getSesion(diaVista);
+  ses.cardioMin = (!isNaN(m) && m>0) ? m : CARDIO_MIN_DEF;
+  guardar(); renderHoy();
+}
+function setCardioInt(inten){
+  const ses=getSesion(diaVista);
+  ses.cardioInt=inten;
+  guardar(); renderHoy();
+}
+function toggleWarmup(){
+  const ses=getSesion(diaVista);
+  ses.warmup=!ses.warmup;
+  guardar(); renderHoy();
+}
+function toggleCardio(){
+  const ses=getSesion(diaVista);
+  ses.cardio=!ses.cardio;
+  if(ses.cardio){
+    if(ses.cardioMin==null) ses.cardioMin=CARDIO_MIN_DEF;
+    if(!ses.cardioInt) ses.cardioInt=(PLAN[diaVista].cardioIntDef||CARDIO_INT_DEF);
+    if(!ses.cardioTipo) ses.cardioTipo=CARDIO_TIPO_DEF;
+  }
+  guardar();
+  if(ses.cardio) toast("¡Buen cardio! "+(ses.cardioTipo==="Trote"?"🏃":"🚴")+" "+(ses.cardioMin||CARDIO_MIN_DEF)+" min · "+(ses.cardioInt||CARDIO_INT_DEF));
+  renderHoy();
+}
+function setCarga(id, val){
+  const kg=parseFloat(val);
+  if(isNaN(kg) || kg<=0) return;
+  D.ultCarga[id]=kg;
+  if(!D.cargas[id]) D.cargas[id]=[];
+  const iso=isoDeDia(diaVista);
+  const ya=D.cargas[id].find(x=>x.d===iso);
+  if(ya) ya.kg=kg; else D.cargas[id].push({d:iso, kg:kg});
+  D.cargas[id].sort((a,b)=>a.d<b.d?-1:1);
+  guardar();
+  toast("Carga guardada: "+kg+" kg ✓");
+}
+function registrarCargaSiHay(id){
+  if(!EJERCICIOS[id].carga) return;
+  const kg=D.ultCarga[id];
+  if(!kg) return;
+  if(!D.cargas[id]) D.cargas[id]=[];
+  const iso=isoDeDia(diaVista);
+  const hist=D.cargas[id];
+  const ya=hist.find(x=>x.d===iso);
+  if(ya) ya.kg=kg; else hist.push({d:iso, kg:kg});
+  guardar();
+}
+
+/* ================= TIMER ================= */
+let timerInt=null, timerFin=0, timerDone=null, timerFinMsg="⏰ ¡A la siguiente serie!";
+
+/* Wake lock: la pantalla no se apaga mientras corre el timer */
+let wakeLock=null;
+async function wlOn(){
+  try{ if("wakeLock" in navigator) wakeLock=await navigator.wakeLock.request("screen"); }catch(e){}
+}
+function wlOff(){
+  try{ if(wakeLock) wakeLock.release(); }catch(e){}
+  wakeLock=null;
+}
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState==="visible" && timerInt &&
+     document.getElementById("timerBar").classList.contains("on")) wlOn();
+});
+
+function iniciarTimer(seg, lbl, onDone, finMsg){
+  clearInterval(timerInt);
+  timerFin=Date.now()+seg*1000;
+  timerDone = onDone || null;
+  timerFinMsg = finMsg || "⏰ ¡A la siguiente serie!";
+  document.getElementById("timerLbl").textContent=lbl;
+  document.getElementById("timerBar").classList.add("on");
+  wlOn();
+  tickTimer();
+  timerInt=setInterval(tickTimer, 250);
+}
+function beep(){
+  if(navigator.vibrate) navigator.vibrate([200,100,200]);
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value=880; g.gain.value=0.15;
+    o.start(); o.stop(ctx.currentTime+0.35);
+  }catch(e){}
+}
+function tickTimer(){
+  const rest=Math.max(0, Math.round((timerFin-Date.now())/1000));
+  const m=Math.floor(rest/60), s=rest%60;
+  document.getElementById("timerNum").textContent=m+":"+String(s).padStart(2,"0");
+  if(rest<=0){
+    const cb=timerDone, msg=timerFinMsg;
+    timerStop();
+    toast(msg);
+    beep();
+    if(cb) cb();
+  }
+}
+function timerMas30(){ timerFin+=30000; tickTimer(); }
+function timerStop(){ clearInterval(timerInt); timerInt=null; timerDone=null; wlOff(); document.getElementById("timerBar").classList.remove("on"); }
+
+/* Aguante (plancha): al iniciar, cuenta regresiva para saber cuándo parar */
+function iniciarAguante(id){
+  const e=EJERCICIOS[id];
+  const seg=segAguante(e);
+  if(seg<=0) return;
+  const r=rango(e), ns=numSeries(id);
+  const ses=getSesion(diaVista);
+  const arr=ses.sets[id] || (ses.sets[id]=Array(ns).fill(false));
+  while(arr.length<ns) arr.push(false);
+  const i=arr.findIndex(x=>!hecho(x));
+  if(i<0){ toast("Ya completaste "+e.n); return; }
+  const serie=i+1;
+  iniciarTimer(seg, "🧘 "+e.n+" · aguanta (serie "+serie+"/"+ns+")", ()=>{
+    arr[i]=r.low; guardar();
+    const faltan=ns-arr.filter(hecho).length;
+    renderHoy();
+    if(faltan>0) iniciarTimer(e.p, e.n+" · pausa antes de la serie "+(arr.filter(hecho).length+1));
+    else toast("✓ "+e.n+" completado");
+  }, "🛑 ¡Para! Serie "+serie+" cumplida");
+}
+
+/* ================= PROGRESO ================= */
+const fmtFechaA = iso => fmtFecha(iso)+"/"+iso.slice(2,4);
+function diaDe(id){
+  for(const d in PLAN){ if(PLAN[d].ej.includes(id)) return PLAN[d].titulo.split("·")[0].trim(); }
+  return "";
+}
+function nuevosHtml(ids){
+  return ids.map(id=>{
+    const e=EJERCICIOS[id];
+    const carga = e.ini ? ` · ${e.ini}` : "";
+    return `<span class="nvo">⭐ <b>${e.n}</b> · ${diaDe(id)}<br>`+
+      `<span class="det">${e.s}×${e.r} · pausa ${e.p} s · ${e.imp}${carga}</span></span>`;
+  }).join("");
+}
+function renderCiclos(){
+  const cont=document.getElementById("listaCiclos"); if(!cont) return;
+  cont.innerHTML="";
+  const hoy=hoyISO();
+  const regs=D.progresiones||[];
+
+  // Progresiones ya registradas
+  regs.forEach((iso,i)=>{
+    const card=document.createElement("div");
+    card.className="ciclo";
+    const prev=i>0 ? Math.round((new Date(iso+"T12:00:00")-new Date(regs[i-1]+"T12:00:00"))/DIA_MS/7) : null;
+    card.innerHTML=`
+      <div class="c-head">
+        <div>
+          <div class="c-num">Progresión ${i+1}</div>
+          <div class="c-fechas">${fmtFechaA(iso)}${prev!==null?` · ${prev} semanas después de la anterior`:""}</div>
+        </div>
+        <span class="c-est done">✓ Aplicada</span>
+      </div>`;
+    cont.appendChild(card);
+  });
+
+  // Próxima progresión (última registrada + 8 semanas) y las 2 siguientes estimadas
+  let fecha=proxProgISO();
+  for(let k=0; k<3; k++){
+    const card=document.createElement("div");
+    const esProx = k===0;
+    card.className="ciclo"+(esProx?" actual":"");
+    const nuevos=NUEVOS_POR_PROG[k];
+    let est, cuerpo="";
+    if(esProx && hoy>=fecha){
+      const pend=Object.keys(EJERCICIOS).filter(id=>sugerencia(id)).length;
+      est=`<span class="c-est curso">¡Toca progresar!</span>`;
+      cuerpo=`<b>${pend}</b> ${pend===1?"sugerencia lista":"sugerencias listas"} — revísalas abajo o en la vista Hoy. Al responderlas todas, la progresión queda registrada y la próxima se agenda 8 semanas después.`;
+    } else if(esProx){
+      const dd=Math.round((new Date(fecha+"T12:00:00")-new Date(hoy+"T12:00:00"))/DIA_MS);
+      est=`<span class="c-est curso">En ${dd} días</span>`;
+      cuerpo=`Las subidas de carga ya no esperan esta fecha: cuando llegas al tope del rango en 2 sesiones seguidas, la app te lo sugiere al tiro. En esta fecha se hace la revisión estructural del plan (objetivos de reps y ejercicios nuevos).`;
+    } else {
+      est=`<span class="c-est prox">Estimada</span>`;
+      cuerpo=`Fecha estimada si progresas a tiempo (8 semanas después de la anterior).`;
+    }
+    if(nuevos){
+      cuerpo+=`<br><b>Ejercicios que se suman ese día</b> — ${nuevos.motivo}:${nuevosHtml(nuevos.ids)}`;
+    }
+    card.innerHTML=`
+      <div class="c-head">
+        <div>
+          <div class="c-num">Progresión ${regs.length+k+1}</div>
+          <div class="c-fechas">${fmtFechaA(fecha)}</div>
+        </div>
+        ${est}
+      </div>
+      <div class="c-body">${cuerpo}</div>`;
+    cont.appendChild(card);
+    fecha=sumarDias(fecha, PROG_DIAS);
+  }
+
+  const nota=document.createElement("div");
+  nota.className="nota";
+  nota.innerHTML=`📚 <b>Lo que dice la ciencia del deporte:</b> la progresión no es por calendario sino por rendimiento —
+    cuando logras 1–2 reps sobre tu objetivo en dos sesiones seguidas, sube la carga <b>~2–10%</b> (ACSM; en ejercicios
+    pequeños el extremo bajo, en pierna el alto). La <b>doble progresión</b> (reps primero, peso después) es el método
+    más respaldado. Las revisiones estructuradas del plan se recomiendan cada <b>4–8 semanas</b> (mesociclo) y
+    variar o sumar ejercicios cada <b>8–12 semanas</b> para evitar estancamiento; tu ritmo de 8 semanas está dentro
+    de lo recomendado. Si una serie no progresa en 2 ciclos, considera bajar 5–10% la carga una semana (descarga) y volver a subir.`;
+  cont.appendChild(nota);
+}
+/* ===== Tonelaje semanal (kg totales movidos = carga × reps) ===== */
+function cargaEnFecha(id, iso){
+  const hist=(D.cargas && D.cargas[id])||[];
+  let kg=null;
+  for(const x of hist){ if(x.d<=iso) kg=x.kg; }
+  if(kg==null && hist.length) kg=hist[0].kg;               // carga más antigua como aproximación
+  return kg!=null ? kg : ((D.ultCarga && D.ultCarga[id])||null);
+}
+function tonelajeSemana(offset){ // 0 = semana actual, 1 = pasada
+  const h=new Date();
+  const ini=new Date(h); ini.setDate(h.getDate()-h.getDay()-7*offset); ini.setHours(0,0,0,0);
+  const fin=new Date(ini); fin.setDate(ini.getDate()+7);
+  let t=0;
+  for(const iso in D.sesiones){
+    const d=new Date(iso+"T12:00:00");
+    if(d<ini || d>=fin) continue;
+    const sets=D.sesiones[iso].sets||{};
+    for(const id in sets){
+      if(!EJERCICIOS[id] || !EJERCICIOS[id].carga) continue;
+      const kg=cargaEnFecha(id, iso); if(!kg) continue;
+      const r=rango(EJERCICIOS[id]);
+      (sets[id]||[]).forEach(v=>{ if(hecho(v)) t+=kg*numVal(v,r); });
+    }
+  }
+  return Math.round(t);
+}
+
+/* ===== Sparkline genérico (línea mint sobre canvas) ===== */
+function dibujarSparkGen(canvasId, vals){
+  const cv=document.getElementById(canvasId);
+  if(!cv || vals.length<2) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||300, H=cv.height/(cv.width/cv.clientWidth||1)||70;
+  const alto=parseInt(cv.getAttribute("height"),10)||70;
+  cv.width=W*dpr; cv.height=alto*dpr;
+  const c=cv.getContext("2d"); c.scale(dpr,dpr); c.clearRect(0,0,W,alto);
+  const min=Math.min(...vals), max=Math.max(...vals);
+  const X=i=> 6+(W-12)*(i/(vals.length-1));
+  const Y=v=> max===min ? alto/2 : 8+(alto-16)*(1-(v-min)/(max-min));
+  c.strokeStyle=TC('--mint'); c.lineWidth=2;
+  c.beginPath();
+  vals.forEach((v,i)=> i ? c.lineTo(X(i),Y(v)) : c.moveTo(X(i),Y(v)));
+  c.stroke();
+  const j=vals.length-1;
+  c.fillStyle=TC('--mint');
+  c.beginPath(); c.arc(X(j), Y(vals[j]), 3.5, 0, Math.PI*2); c.fill();
+  c.fillStyle=TC('--muted'); c.font="11px sans-serif";
+  c.fillText(String(vals[0]), 6, alto-2);
+  c.fillStyle=TC('--mint');
+  c.fillText(String(vals[j]), W-30, Y(vals[j])-6);
+}
+function verHistProg(el, id){
+  const h=el.parentElement.querySelector(".prog-hist");
+  h.classList.toggle("on");
+  if(h.classList.contains("on")) dibujarSparkGen("sp_"+id, ((D.cargas&&D.cargas[id])||[]).map(x=>x.kg));
+}
+
+function renderProg(){
+  renderHeatmap();
+  renderE1rm();
+  renderCiclos();
+  // sesiones esta semana
+  let semana=0, total=0;
+  for(const iso in D.sesiones){
+    const ses=D.sesiones[iso];
+    const diaSem=new Date(iso+"T12:00:00").getDay();
+    if(PLAN[diaSem] && sesionCompleta(diaSem, ses, iso)){
+      total++;
+      // ¿está en la semana actual?
+      const d=new Date(iso+"T12:00:00"), h=new Date();
+      const ini=new Date(h); ini.setDate(h.getDate()-h.getDay()); ini.setHours(0,0,0,0);
+      if(d>=ini) semana++;
+    }
+  }
+  document.getElementById("stSemana").textContent=semana+"/6";
+  document.getElementById("stTotal").textContent=total;
+  const perdidos = D.pesos.length>=2 ? (D.pesos[0].kg - D.pesos[D.pesos.length-1].kg) : 0;
+  document.getElementById("stPeso").textContent="−"+perdidos.toFixed(1);
+  const tonAhora=tonelajeSemana(0), tonAntes=tonelajeSemana(1);
+  document.getElementById("stTon").textContent = tonAhora ? tonAhora.toLocaleString("es-CL") : "—";
+  document.getElementById("stTonPrev").textContent = tonAntes ? tonAntes.toLocaleString("es-CL") : "—";
+
+  const cont=document.getElementById("listaProg"); cont.innerHTML="";
+  Object.keys(EJERCICIOS).filter(id=>ejActivo(id, hoyISO())).forEach(id=>{
+    const e=EJERCICIOS[id], kg=esKg(id);
+    const sug=pref('sugerencias')?sugerencia(id):null;
+    const card=document.createElement("div");
+    card.className="prog-ej";
+
+    let derecha="—", cuerpo="";
+    if(kg){
+      const hist=D.cargas[id]||[];
+      const ult=hist.length ? hist[hist.length-1] : null;
+      derecha = ult ? ult.kg+" kg" : "—";
+      let histHtml="";
+      if(hist.length>=2) histHtml+=`<canvas class="spark" id="sp_${id}" height="70"></canvas>`;
+      if(hist.length){
+        const max=Math.max(...hist.map(x=>x.kg));
+        const sube=new Set();
+        for(let k=1;k<hist.length;k++){ if(hist[k].kg>hist[k-1].kg) sube.add(hist[k].d); }
+        histHtml += hist.slice(-12).reverse().map(x=>
+          `<div class="h-row"><span>${fmtFecha(x.d)}${sube.has(x.d)?' <span class="badge-sube">⬆</span>':''}</span><b>${x.kg} kg${x.kg===max?' 🏆':''}</b></div>`).join("");
+      } else {
+        histHtml = `<div class="h-row"><span>Sin cargas aún. Anótalas en la vista Hoy.</span></div>`;
+      }
+      const incHtml=`<div class="h-row"><span>Subir de a</span><span><input type="number" step="0.5" class="inc-in" value="${incremento(id)}" onchange="setIncremento('${id}', this.value)"> kg</span></div>`;
+      let e1rmHtml="";
+      if(pref('e1rm')){ const rz=e1rmResumen(id); if(rz) e1rmHtml=`<div class="h-row"><span>1RM estimado (Epley)</span><b>${rz.actual} kg · récord ${rz.rec} kg</b></div>`; }
+      cuerpo = e1rmHtml + incHtml + histHtml;
+    } else {
+      derecha = numSeries(id)+"×";
+      const extra=(D.seriesExtra&&D.seriesExtra[id])||0;
+      cuerpo = `<div class="h-row"><span>Objetivo actual</span><b>${numSeries(id)}×${e.r}</b></div>`+
+               (extra>0?`<div class="h-row"><span>Series sumadas por progresión</span><b>+${extra}</b></div>`:``);
+    }
+
+    const sugHtml = sug ? `<div class="prog-sug">⬆ <b>Listo para subir:</b> ${sug.texto}
+        <div class="row2" style="margin-top:8px">
+          <button class="cardio-btn" onclick="aplicarProg('${id}')">Aplicar</button>
+          <button class="cardio-btn" onclick="posponerProg('${id}')">Ahora no</button>
+        </div></div>` : "";
+
+    card.innerHTML=`
+      <div class="fila" onclick="verHistProg(this,'${id}')">
+        <div>
+          <div style="font-weight:700;">${e.n}${sug?'<span class="badge-sube">⬆</span>':''}</div>
+          <div class="ej-meta">${e.imp} · ${numSeries(id)}×${e.r}</div>
+        </div>
+        <div class="ult">${derecha} <span style="color:var(--muted); font-size:12px;">▾</span></div>
+      </div>
+      ${kg?descargaHtml(id):""}
+      ${sugHtml}
+      <div class="prog-hist">${cuerpo}</div>`;
+    cont.appendChild(card);
+  });
+}
+
+/* ================= PESO ================= */
+function catIMC(imc){
+  if(imc<18.5) return "Bajo peso";
+  if(imc<25) return "Normal";
+  if(imc<30) return "Sobrepeso";
+  if(imc<35) return "Obesidad I";
+  if(imc<40) return "Obesidad II";
+  return "Obesidad III";
+}
+function fechaForm(idInput){ // fecha elegida en el formulario (por defecto hoy); nunca futura
+  const el=document.getElementById(idInput);
+  const v=el && el.value;
+  if(v && /^\d{4}-\d{2}-\d{2}$/.test(v) && v<=hoyISO()) return v;
+  return hoyISO();
+}
+function limpiarFecha(idInput){ const el=document.getElementById(idInput); if(el) el.value=""; }
+function agregarPeso(){
+  const v=parseFloat(document.getElementById("inPeso").value);
+  if(isNaN(v) || v<30 || v>250){ toast("Ingresa un peso válido"); return; }
+  const iso=fechaForm("inPesoFecha");
+  const ya=D.pesos.find(x=>x.d===iso);
+  if(ya) ya.kg=v; else D.pesos.push({d:iso, kg:v});
+  D.pesos.sort((a,b)=>a.d<b.d?-1:1);
+  guardar();
+  document.getElementById("inPeso").value="";
+  limpiarFecha("inPesoFecha");
+  toast("Peso registrado ✓ ("+fmtFecha(iso)+")");
+  renderPeso();
+}
+function borrarPeso(iso){
+  const idx=D.pesos.findIndex(x=>x.d===iso); if(idx<0) return;
+  const x=D.pesos[idx];
+  D.pesos.splice(idx,1); guardar(); renderPeso();
+  toastUndo("Borrado "+x.kg+" kg ("+fmtFecha(iso)+")", ()=>{ D.pesos.push(x); D.pesos.sort((a,b)=>a.d<b.d?-1:1); guardar(); renderPeso(); });
+}
+function renderPeso(){
+  const p=D.pesos;
+  const ult=p[p.length-1];
+  const imc=ult.kg/(ALTURA*ALTURA);
+  const falta=(ult.kg-OBJETIVO);
+  document.getElementById("pesoResumen").textContent =
+    `${ult.kg} kg · IMC ${imc.toFixed(1)} (${catIMC(imc)}) · ${falta>0 ? "faltan "+falta.toFixed(1)+" kg para tu meta de "+OBJETIVO : "🎉 ¡meta de "+OBJETIVO+" kg alcanzada!"}`;
+
+  // lista (últimos 12)
+  const cont=document.getElementById("listaPeso"); cont.innerHTML="";
+  const rev=[...p].reverse().slice(0,12);
+  rev.forEach((x,i)=>{
+    const idx=p.indexOf(x);
+    const prev=idx>0 ? p[idx-1].kg : null;
+    const varr=prev!==null ? (x.kg-prev) : 0;
+    const imcX=x.kg/(ALTURA*ALTURA);
+    const row=document.createElement("div");
+    row.className="peso-row";
+    row.innerHTML=`<span>${fmtFecha(x.d)}/${x.d.slice(2,4)}</span>
+      <span class="cat">${catIMC(imcX)} · IMC ${imcX.toFixed(1)}</span>
+      <span><b>${x.kg} kg</b></span>
+      <span class="${varr<=0?'var-b':'var-m'}">${varr>0?'+':''}${varr.toFixed(1)}</span>
+      <button class="row-x" onclick="borrarPeso('${x.d}')" title="Borrar registro">✕</button>`;
+    cont.appendChild(row);
+  });
+
+  dibujarChart();
+  renderTendencia();
+  renderCintura();
+  renderMedidasCorp();
+}
+
+/* ===== Tendencia: ritmo de las últimas semanas, estancamiento y fecha estimada ===== */
+function ritmoSemanal(){ // kg/semana según regresión lineal de los últimos 6 pesajes
+  const p=D.pesos;
+  if(p.length<5) return null;
+  const last=p.slice(-6);
+  const t0=new Date(last[0].d+"T12:00:00").getTime();
+  const xs=last.map(x=>(new Date(x.d+"T12:00:00").getTime()-t0)/DIA_MS);
+  const ys=last.map(x=>x.kg);
+  const mx=xs.reduce((a,b)=>a+b,0)/xs.length, my=ys.reduce((a,b)=>a+b,0)/ys.length;
+  let num=0, den=0;
+  xs.forEach((x,i)=>{ num+=(x-mx)*(ys[i]-my); den+=(x-mx)*(x-mx); });
+  if(!den) return null;
+  return {slope:num/den*7, n:last.length};
+}
+function renderTendencia(){
+  const el=document.getElementById("pesoTendencia"); if(!el) return;
+  const r=ritmoSemanal();
+  if(!r){ el.innerHTML="Registra al menos 5 pesajes para ver tu tendencia."; return; }
+  const ult=D.pesos[D.pesos.length-1];
+  const m=(D.medidas||[]);
+  const cintTxt = m.length ? ` Cintura actual: <b>${m[m.length-1].cm} cm</b>.` : "";
+  if(ult.kg<=OBJETIVO){
+    el.innerHTML=`🎉 <b>Meta de ${OBJETIVO} kg alcanzada.</b> Ahora el juego es mantener: misma rutina, y vigila que la tendencia no vuelva a subir.${cintTxt}`;
+  } else if(r.slope>-0.05){
+    el.innerHTML=`⚠️ <b>Tendencia de las últimas ${r.n} semanas: ${r.slope>=0?"+":""}${r.slope.toFixed(2)} kg/sem — el peso está plano.</b>${cintTxt}
+      Si la cintura baja aunque la pesa no se mueva, estás recomponiendo (músculo por grasa) y vas bien.
+      Si nada se mueve y quieres seguir bajando, el ajuste es en la comida: ~300–500 kcal menos al día, más proteína y verduras. El entrenamiento ya lo tienes.`;
+  } else {
+    const dias=Math.round((ult.kg-OBJETIVO)/(-r.slope)*7);
+    el.innerHTML=`📉 <b>Vas bajando ~${(-r.slope).toFixed(2)} kg/sem.</b> A este ritmo llegarías a los ${OBJETIVO} kg alrededor del <b>${fmtFechaA(sumarDias(hoyISO(), dias))}</b>.${cintTxt}`;
+  }
+}
+
+/* ===== Cintura ===== */
+function agregarCintura(){
+  const v=parseFloat(document.getElementById("inCintura").value);
+  if(isNaN(v) || v<40 || v>200){ toast("Ingresa una medida válida (cm)"); return; }
+  const iso=fechaForm("inCinturaFecha");
+  if(!D.medidas) D.medidas=[];
+  const ya=D.medidas.find(x=>x.d===iso);
+  if(ya) ya.cm=v; else D.medidas.push({d:iso, cm:v});
+  D.medidas.sort((a,b)=>a.d<b.d?-1:1);
+  guardar();
+  document.getElementById("inCintura").value="";
+  limpiarFecha("inCinturaFecha");
+  toast("Cintura registrada ✓ ("+fmtFecha(iso)+")");
+  renderPeso();
+}
+function borrarCintura(iso){
+  const idx=(D.medidas||[]).findIndex(x=>x.d===iso); if(idx<0) return;
+  const x=D.medidas[idx];
+  D.medidas.splice(idx,1); guardar(); renderPeso();
+  toastUndo("Borrado "+x.cm+" cm ("+fmtFecha(iso)+")", ()=>{ D.medidas.push(x); D.medidas.sort((a,b)=>a.d<b.d?-1:1); guardar(); renderPeso(); });
+}
+function renderCintura(){
+  const box=document.getElementById("cinturaBox"), cont=document.getElementById("listaCintura");
+  if(!box || !cont) return;
+  const m=D.medidas||[];
+  if(!m.length){ box.style.display="none"; return; }
+  box.style.display="block";
+  cont.innerHTML="";
+  [...m].reverse().slice(0,8).forEach(x=>{
+    const idx=m.indexOf(x);
+    const prev=idx>0 ? m[idx-1].cm : null;
+    const varr=prev!==null ? (x.cm-prev) : 0;
+    const row=document.createElement("div");
+    row.className="peso-row";
+    row.innerHTML=`<span>${fmtFecha(x.d)}/${x.d.slice(2,4)}</span>
+      <span><b>${x.cm} cm</b></span>
+      <span class="${varr<=0?'var-b':'var-m'}">${varr>0?'+':''}${varr.toFixed(1)}</span>
+      <button class="row-x" onclick="borrarCintura('${x.d}')" title="Borrar registro">✕</button>`;
+    cont.appendChild(row);
+  });
+  dibujarSparkGen("chartCintura", m.map(x=>x.cm));
+}
+function dibujarChart(){
+  const cv=document.getElementById("chartPeso");
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||340, H=220;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const c=cv.getContext("2d"); c.scale(dpr,dpr);
+  c.clearRect(0,0,W,H);
+  const p=D.pesos;
+  if(p.length<2) return;
+  const kgs=p.map(x=>x.kg);
+  const min=Math.min(OBJETIVO, ...kgs)-2, max=Math.max(...kgs)+2;
+  const pad={l:34,r:10,t:12,b:22};
+  const X=i=> pad.l + (W-pad.l-pad.r)*(i/(p.length-1));
+  const Y=v=> pad.t + (H-pad.t-pad.b)*(1-(v-min)/(max-min));
+
+  // grid horizontal
+  c.strokeStyle=TC('--line'); c.fillStyle=TC('--muted'); c.font="11px sans-serif"; c.lineWidth=1;
+  for(let v=Math.ceil(min/5)*5; v<=max; v+=5){
+    c.beginPath(); c.moveTo(pad.l, Y(v)); c.lineTo(W-pad.r, Y(v)); c.stroke();
+    c.fillText(v, 4, Y(v)+4);
+  }
+  // línea objetivo
+  c.strokeStyle=TC('--amber'); c.setLineDash([5,4]); c.lineWidth=1.5;
+  c.beginPath(); c.moveTo(pad.l, Y(OBJETIVO)); c.lineTo(W-pad.r, Y(OBJETIVO)); c.stroke();
+  c.setLineDash([]);
+  c.fillStyle=TC('--amber'); c.fillText("meta "+OBJETIVO, W-pad.r-60, Y(OBJETIVO)-5);
+
+  // área + línea de peso
+  const grad=c.createLinearGradient(0,pad.t,0,H);
+  grad.addColorStop(0,rgbaDe(TC('--mint'),.25)); grad.addColorStop(1,rgbaDe(TC('--mint'),0));
+  c.beginPath();
+  p.forEach((x,i)=>{ i===0 ? c.moveTo(X(i),Y(x.kg)) : c.lineTo(X(i),Y(x.kg)); });
+  c.strokeStyle=TC('--mint'); c.lineWidth=2.5; c.stroke();
+  c.lineTo(X(p.length-1),H-pad.b); c.lineTo(X(0),H-pad.b); c.closePath();
+  c.fillStyle=grad; c.fill();
+  // línea de tendencia (media móvil de 4 pesajes)
+  if(p.length>=4){
+    const ma=p.map((x,i)=>{
+      const a=p.slice(Math.max(0,i-3), i+1);
+      return a.reduce((s,y)=>s+y.kg,0)/a.length;
+    });
+    c.strokeStyle=TC('--chart-trend'); c.lineWidth=1.5;
+    c.beginPath();
+    ma.forEach((v,i)=> i ? c.lineTo(X(i),Y(v)) : c.moveTo(X(i),Y(v)));
+    c.stroke();
+    c.fillStyle=TC('--chart-trend'); c.fillText("tendencia 4 sem", pad.l+4, pad.t+10);
+  }
+
+  // punto final
+  const last=p[p.length-1];
+  c.beginPath(); c.arc(X(p.length-1), Y(last.kg), 4.5, 0, Math.PI*2);
+  c.fillStyle=TC('--mint'); c.fill();
+}
+
+/* ================= NUEVAS FUNCIONALIDADES ================= */
+/* Preferencias: por defecto TODO activado; sólo se apaga si guardas false */
+function pref(k){ return !(D && D.prefs && D.prefs[k]===false); }
+
+/* ----- Medidas corporales (pecho, cadera, brazo, muslo) ----- */
+const MEDIDAS_CORP=[
+  {key:"pecho",  label:"Pecho",  min:50, max:200, hint:"a la altura de los pezones, de pie y relajado"},
+  {key:"cadera", label:"Cadera", min:50, max:200, hint:"por la parte más ancha del glúteo, pies juntos"},
+  {key:"brazo",  label:"Brazo",  min:15, max:80,  hint:"bíceps contraído, siempre el mismo brazo"},
+  {key:"muslo",  label:"Muslo",  min:30, max:120, hint:"parte más ancha del muslo, de pie"},
+];
+let medSel="pecho";
+function medidaArr(key){ if(!D.medidasExtra) D.medidasExtra={}; if(!D.medidasExtra[key]) D.medidasExtra[key]=[]; return D.medidasExtra[key]; }
+function setMedSel(k){ medSel=k; renderMedidasCorp(); }
+function agregarMedidaCorp(){
+  const cfg=MEDIDAS_CORP.find(m=>m.key===medSel); if(!cfg) return;
+  const inp=document.getElementById("inMedCorp");
+  const v=parseFloat(inp.value);
+  if(isNaN(v) || v<cfg.min || v>cfg.max){ toast("Ingresa una medida válida (cm)"); return; }
+  const arr=medidaArr(medSel), iso=fechaForm("inMedFecha");
+  const ya=arr.find(x=>x.d===iso);
+  if(ya) ya.cm=v; else arr.push({d:iso, cm:v});
+  arr.sort((a,b)=>a.d<b.d?-1:1);
+  guardar(); inp.value="";
+  limpiarFecha("inMedFecha");
+  toast(cfg.label+" registrado ✓ ("+fmtFecha(iso)+")");
+  renderMedidasCorp();
+}
+function borrarMedidaCorp(key, iso){
+  const arr=medidaArr(key);
+  const idx=arr.findIndex(x=>x.d===iso); if(idx<0) return;
+  const x=arr[idx];
+  arr.splice(idx,1); guardar(); renderMedidasCorp();
+  toastUndo("Borrado "+x.cm+" cm ("+fmtFecha(iso)+")", ()=>{ arr.push(x); arr.sort((a,b)=>a.d<b.d?-1:1); guardar(); renderMedidasCorp(); });
+}
+function renderMedidasCorp(){
+  const sec=document.getElementById("medidasCorpSec"); if(!sec) return;
+  if(!pref('medidas')){ sec.style.display="none"; return; }
+  sec.style.display="block";
+  document.getElementById("medChips").innerHTML=MEDIDAS_CORP.map(m=>{
+    const arr=medidaArr(m.key); const ult=arr.length ? arr[arr.length-1].cm+" cm" : "—";
+    return `<button class="med-chip ${m.key===medSel?'sel':''}" onclick="setMedSel('${m.key}')">${m.label} · ${ult}</button>`;
+  }).join("");
+  const cfg=MEDIDAS_CORP.find(m=>m.key===medSel);
+  const inp=document.getElementById("inMedCorp"); if(inp) inp.placeholder=cfg.label+" de hoy (cm)";
+  const hint=document.getElementById("medHint");
+  if(hint) hint.innerHTML=`📏 <b>${cfg.label}:</b> ${cfg.hint}. Mídete 1 vez por semana, en las mismas condiciones. En pecho, brazo y muslo, subir suele ser músculo; en cadera y cintura, bajar suele ser grasa.`;
+  const arr=medidaArr(medSel);
+  const box=document.getElementById("medCorpBox"), lista=document.getElementById("listaMedCorp");
+  if(!arr.length){ box.style.display="none"; lista.innerHTML=""; return; }
+  box.style.display="block"; lista.innerHTML="";
+  [...arr].reverse().slice(0,8).forEach(x=>{
+    const idx=arr.indexOf(x); const prev=idx>0 ? arr[idx-1].cm : null;
+    const varr=prev!==null ? (x.cm-prev) : 0;
+    const row=document.createElement("div"); row.className="peso-row";
+    row.innerHTML=`<span>${fmtFecha(x.d)}/${x.d.slice(2,4)}</span>
+      <span><b>${x.cm} cm</b></span>
+      <span class="var-n">${varr>0?'+':''}${varr.toFixed(1)}</span>
+      <button class="row-x" onclick="borrarMedidaCorp('${medSel}','${x.d}')" title="Borrar registro">✕</button>`;
+    lista.appendChild(row);
+  });
+  dibujarSparkGen("chartMedCorp", arr.map(x=>x.cm));
+}
+
+/* ----- Notas por sesión ----- */
+function setNota(iso, val){
+  if(!D.sesiones[iso]) D.sesiones[iso]={sets:{}, cardio:false};
+  const t=(val||"").trim();
+  if(t) D.sesiones[iso].nota=t; else delete D.sesiones[iso].nota;
+  guardar();
+}
+
+/* ----- RPE de la sesión ----- */
+function setRpe(v){
+  const ses=getSesion(diaVista);
+  const n=parseInt(v,10);
+  ses.rpe = (n>=1 && n<=10) ? n : null;
+  guardar(); renderHoy();
+}
+
+/* ----- 1RM estimado (fórmula de Epley: 1RM = peso × (1 + reps/30)) ----- */
+function epley(kg, reps){ return kg*(1+reps/30); }
+function e1rmHist(id){
+  if(!EJERCICIOS[id] || !EJERCICIOS[id].carga) return [];
+  const r=rango(EJERCICIOS[id]); const out=[];
+  Object.keys(D.sesiones).sort().forEach(iso=>{
+    const ses=D.sesiones[iso]; if(!ses || ses._seed) return;
+    const arr=(ses.sets && ses.sets[id])||[]; if(!arr.length) return;
+    const kg=cargaEnFecha(id, iso); if(!kg) return;
+    let best=0;
+    arr.forEach(v=>{ const reps=numVal(v,r); if(reps>0){ const e=epley(kg,reps); if(e>best) best=e; } });
+    if(best>0) out.push({d:iso, e:Math.round(best*10)/10});
+  });
+  return out;
+}
+function e1rmResumen(id){
+  const h=e1rmHist(id); if(!h.length) return null;
+  return {actual:h[h.length-1].e, rec:Math.max(...h.map(x=>x.e)), n:h.length};
+}
+function renderE1rm(){
+  const sec=document.getElementById("e1rmSec"); if(!sec) return;
+  if(!pref('e1rm')){ sec.style.display="none"; return; }
+  sec.style.display="block";
+  const destac=[["press","Press"],["remoZ","Remo Z"],["sent","Sentadilla"]];
+  document.getElementById("e1rmBox").innerHTML=destac.map(([id,lbl])=>{
+    const rz=e1rmResumen(id);
+    return `<div class="stat"><div class="num">${rz?rz.actual+" kg":"—"}</div><div class="lbl">1RM est. ${lbl}</div></div>`;
+  }).join("");
+}
+
+/* ----- Heatmap de actividad tipo GitHub ----- */
+function progDates(){
+  const s=new Set();
+  for(const id in (D.cargas||{})){
+    const h=D.cargas[id]||[];
+    for(let k=1;k<h.length;k++){ if(h[k].kg>h[k-1].kg) s.add(h[k].d); }
+  }
+  (D.progresiones||[]).forEach(d=>s.add(d));
+  return s;
+}
+function diaExcede(ses, diaSem, iso){
+  const plan=PLAN[diaSem]; if(!plan) return false;
+  const ejs=plan.ej.filter(id=>ejActivo(id, iso));
+  for(const id of ejs){
+    const r=rango(EJERCICIOS[id]); const arr=(ses.sets && ses.sets[id])||[];
+    if(arr.some(v=>numVal(v,r)>r.high)) return true;          // superó el tope de reps del rango
+    if(arr.filter(hecho).length>numSeries(id)) return true;   // hizo series de más
+  }
+  if(plan.cardio>0 && ses.cardio && ses.cardioMin && ses.cardioMin>plan.cardio) return true; // más cardio
+  return false;
+}
+function renderHeatmap(){
+  const sec=document.getElementById("heatmapSec"); if(!sec) return;
+  if(!pref('heatmap')){ sec.style.display="none"; return; }
+  sec.style.display="block";
+  const SEM=53; // ~12 meses (año completo, con scroll horizontal)
+  const hoy=new Date(hoyISO()+"T12:00:00");
+  const ini=new Date(hoy); ini.setDate(hoy.getDate()-hoy.getDay()-7*(SEM-1)); // domingo inicial
+  const proD=progDates();
+  const meses=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  let cols="", monthRow="", lastMonth=-1;
+  for(let w=0; w<SEM; w++){
+    let cells="";
+    for(let d=0; d<7; d++){
+      const f=new Date(ini); f.setDate(ini.getDate()+w*7+d);
+      const iso=isoDe(f);
+      let cls="hm-cell";
+      if(f<=hoy){
+        const ds=f.getDay(), ses=D.sesiones[iso];
+        if(ses){
+          if(PLAN[ds] && sesionCompleta(ds, ses, iso)) cls+= diaExcede(ses,ds,iso) ? " l2" : " l1";
+          else if((ses.sets && Object.values(ses.sets).some(a=>a && a.some(hecho))) || ses.cardio) cls+=" lp";
+        }
+        if(proD.has(iso)) cls+=" prog";
+      } else cls+=" fut";
+      cells+=`<div class="${cls}" title="${iso}"></div>`;
+    }
+    cols+=`<div class="hm-col">${cells}</div>`;
+    const fw=new Date(ini); fw.setDate(ini.getDate()+w*7);
+    const mth=fw.getMonth();
+    monthRow+=`<div class="hm-mlabel">${mth!==lastMonth?meses[mth]:""}</div>`;
+    lastMonth=mth;
+  }
+  document.getElementById("heatmapBox").innerHTML=`<div class="hm-months">${monthRow}</div><div class="hm-grid">${cols}</div>`;
+}
+
+/* ----- Temas visuales (12 estilos) ----- */
+function TC(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888"; }
+function rgbaDe(hex, a){
+  const h=String(hex).replace("#","").trim();
+  const f=h.length===3 ? h.split("").map(x=>x+x).join("") : h;
+  const n=parseInt(f,16);
+  if(isNaN(n)) return `rgba(128,128,128,${a})`;
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+}
+const FONT_DEF='-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+const FONT_MONO='ui-monospace,Menlo,Consolas,monospace';
+function temaV(o){ // completa un tema con valores derivados
+  return Object.assign({
+    "--font":FONT_DEF,
+    "--amber-tint":rgbaDe(o["--amber"]||"#F2B33D",.12),
+    "--danger-tint":rgbaDe(o["--danger"]||"#E56A54",.10),
+  }, o);
+}
+const TEMAS={
+  bosque:{n:"Bosque", d:"verde menta · el clásico", v:temaV({
+    "--bg":"#121714","--card":"#1B2320","--card2":"#232D28","--line":"#2E3A34","--text":"#EDF3EE","--muted":"#93A69B",
+    "--mint":"#8FD8B0","--mint-dark":"#3E8A66","--amber":"#F2B33D","--danger":"#E56A54",
+    "--on-accent":"#0E1512","--on-amber":"#231A05","--tabs-bg":"#0D1210","--hm-lp":"#2E4A3B","--chart-trend":"#7EA6E0"})},
+  voltio:{n:"Voltio", d:"carbón + verde volt, energía", v:temaV({
+    "--bg":"#0A0A0C","--card":"#151518","--card2":"#1E1E23","--line":"#2B2B33","--text":"#F5F5F7","--muted":"#8E8E9A",
+    "--mint":"#D4FF3F","--mint-dark":"#7A9421","--amber":"#FF6B35","--danger":"#FF4D4D",
+    "--on-accent":"#0A0A0C","--on-amber":"#1C0A02","--tabs-bg":"#060607","--hm-lp":"#3A421B","--chart-trend":"#6FB3FF"})},
+  oceano:{n:"Océano", d:"azul profundo, sereno y tech", v:temaV({
+    "--bg":"#0B1220","--card":"#121C30","--card2":"#18263F","--line":"#243756","--text":"#EAF1FB","--muted":"#8FA3C0",
+    "--mint":"#4CC3F7","--mint-dark":"#1E6FA8","--amber":"#FBBF24","--danger":"#F87171",
+    "--on-accent":"#04141F","--on-amber":"#251A02","--tabs-bg":"#070D18","--hm-lp":"#16394C","--chart-trend":"#A78BFA"})},
+  amanecer:{n:"Amanecer", d:"claro y cálido, acento coral", v:temaV({
+    "--bg":"#FAF6F0","--card":"#FFFFFF","--card2":"#F2EDE4","--line":"#E6DFD2","--text":"#2B2620","--muted":"#8B8175",
+    "--mint":"#E85D3D","--mint-dark":"#C24326","--amber":"#2A9D8F","--danger":"#C0392B",
+    "--on-accent":"#FFFFFF","--on-amber":"#FFFFFF","--tabs-bg":"#FFFFFF","--hm-lp":"#F3C5B8","--chart-trend":"#7C6FD0"})},
+  neon:{n:"Neón nocturno", d:"púrpura + magenta, synthwave", v:temaV({
+    "--bg":"#120820","--card":"#1C1032","--card2":"#261743","--line":"#38255E","--text":"#F3EDFC","--muted":"#A392C4",
+    "--mint":"#E879F9","--mint-dark":"#9C3FB0","--amber":"#22D3EE","--danger":"#FB7185",
+    "--on-accent":"#1B0625","--on-amber":"#042A30","--tabs-bg":"#0C0516","--hm-lp":"#4A2560","--chart-trend":"#8B5CF6"})},
+  tinta:{n:"Tinta", d:"blanco minimal, un solo rojo", v:temaV({
+    "--bg":"#FFFFFF","--card":"#FFFFFF","--card2":"#F4F4F4","--line":"#E2E2E2","--text":"#141414","--muted":"#767676",
+    "--mint":"#DC2626","--mint-dark":"#B91C1C","--amber":"#141414","--danger":"#991B1B",
+    "--on-accent":"#FFFFFF","--on-amber":"#FFFFFF","--tabs-bg":"#FFFFFF","--hm-lp":"#F3C1C1","--chart-trend":"#2563EB"})},
+  grafito:{n:"Grafito", d:"monocromo oscuro, sobrio", v:temaV({
+    "--bg":"#101113","--card":"#191B1E","--card2":"#222529","--line":"#2F3339","--text":"#F2F3F5","--muted":"#9AA0A8",
+    "--mint":"#E8EAED","--mint-dark":"#6B7076","--amber":"#C9A227","--danger":"#E5605E",
+    "--on-accent":"#101113","--on-amber":"#241C02","--tabs-bg":"#0B0C0D","--hm-lp":"#3B3F45","--chart-trend":"#6FB3FF"})},
+  fuego:{n:"Fuego", d:"rojo intenso, espíritu de box", v:temaV({
+    "--bg":"#140B0B","--card":"#1F1212","--card2":"#2A1818","--line":"#3B2424","--text":"#F7EEEC","--muted":"#B09A96",
+    "--mint":"#F04438","--mint-dark":"#B22A20","--amber":"#F79009","--danger":"#F97066",
+    "--on-accent":"#FFFFFF","--on-amber":"#2A1602","--tabs-bg":"#0D0707","--hm-lp":"#4A2320","--chart-trend":"#74CAFF"})},
+  oro:{n:"Oro negro", d:"negro + dorado, elegante", v:temaV({
+    "--bg":"#0E0C08","--card":"#181510","--card2":"#221E16","--line":"#363023","--text":"#F5F0E4","--muted":"#A89E88",
+    "--mint":"#E7C36A","--mint-dark":"#A98B34","--amber":"#E78A3C","--danger":"#E56A54",
+    "--on-accent":"#1A1205","--on-amber":"#221000","--tabs-bg":"#090805","--hm-lp":"#40371F","--chart-trend":"#9CB4FF"})},
+  sakura:{n:"Sakura", d:"claro rosado, suave y vivo", v:temaV({
+    "--bg":"#FDF4F7","--card":"#FFFFFF","--card2":"#F7E9EF","--line":"#F0DAE3","--text":"#372B31","--muted":"#9C8390",
+    "--mint":"#EC4899","--mint-dark":"#C2337B","--amber":"#8B5CF6","--danger":"#DC2626",
+    "--on-accent":"#FFFFFF","--on-amber":"#FFFFFF","--tabs-bg":"#FFFFFF","--hm-lp":"#F6C8DD","--chart-trend":"#38BDF8"})},
+  terminal:{n:"Terminal", d:"retro hacker, verde fosforescente", v:temaV({
+    "--bg":"#000000","--card":"#0A0F0A","--card2":"#101810","--line":"#1E2E1E","--text":"#C8FACC","--muted":"#5E8A62",
+    "--mint":"#33FF66","--mint-dark":"#1E9940","--amber":"#FFB000","--danger":"#FF5555",
+    "--on-accent":"#001905","--on-amber":"#241800","--tabs-bg":"#000000","--hm-lp":"#123A1C","--chart-trend":"#33CCFF",
+    "--font":FONT_MONO})},
+  hielo:{n:"Hielo", d:"claro azulado, fresco y limpio", v:temaV({
+    "--bg":"#F0F6FA","--card":"#FFFFFF","--card2":"#E5EEF5","--line":"#D7E3EC","--text":"#1E2A33","--muted":"#74868F",
+    "--mint":"#0284C7","--mint-dark":"#026395","--amber":"#0D9488","--danger":"#DC2626",
+    "--on-accent":"#FFFFFF","--on-amber":"#FFFFFF","--tabs-bg":"#FFFFFF","--hm-lp":"#BFDCEE","--chart-trend":"#7C6FD0"})},
+};
+function temaKey(){ const k=D && D.prefs && D.prefs.tema; return (k && TEMAS[k]) ? k : "bosque"; }
+function pintarTema(){
+  const t=TEMAS[temaKey()];
+  const r=document.documentElement.style;
+  for(const k in t.v) r.setProperty(k, t.v[k]);
+}
+function setTema(k){
+  if(!TEMAS[k]) return;
+  if(!D.prefs) D.prefs={};
+  D.prefs.tema=k;
+  guardar();
+  pintarTema();
+  refrescarVista();
+  toast("Tema: "+TEMAS[k].n+" ✓");
+}
+function renderTemas(){
+  const box=document.getElementById("temasBox"); if(!box) return;
+  const cur=temaKey();
+  box.innerHTML='<div class="tema-grid">'+Object.keys(TEMAS).map(k=>{
+    const t=TEMAS[k], sel=k===cur;
+    return `<button class="tema-card ${sel?'sel':''}" onclick="setTema('${k}')"`+
+      ` style="background:${t.v['--bg']}; border-color:${sel?t.v['--mint']:t.v['--line']}">`+
+      `<span class="tema-dots"><span style="background:${t.v['--mint']}"></span>`+
+      `<span style="background:${t.v['--amber']}"></span>`+
+      `<span style="background:${t.v['--card2']}"></span></span>`+
+      `<span class="tema-n" style="color:${t.v['--text']}">${t.n}${sel?' ✓':''}</span>`+
+      `<span class="tema-d" style="color:${t.v['--muted']}">${t.d}</span></button>`;
+  }).join("")+'</div>';
+}
+
+/* ----- Preferencias: panel de switches ----- */
+const PREFS_LISTA=[
+  ["medidas","Medidas corporales","Pecho, cadera, brazo y muslo en la vista Peso"],
+  ["notas","Notas por sesión","Campo de texto libre al final de cada día en Hoy"],
+  ["warmup","Calentamiento","Tarjeta de calentamiento en los días de fuerza"],
+  ["heatmap","Mapa de actividad","Calendario tipo GitHub en Progresión"],
+  ["e1rm","1RM estimado","Fuerza estimada por ejercicio (fórmula de Epley)"],
+  ["rpe","RPE de la sesión","Deslizador de esfuerzo percibido al final de la sesión"],
+  ["tecnica","Técnica paso a paso","Guía de técnica desplegable en cada ejercicio"],
+  ["sugerencias","Sugerencias de progresión","Avisos de subir peso, reps o series"],
+  ["descarga","Semana de descarga","Sugerencia de deload tras 2 ciclos sin avanzar"],
+];
+function setPref(k, val){ if(!D.prefs) D.prefs={}; D.prefs[k]=val; guardar(); renderPrefs(); refrescarVista(); }
+function renderPrefs(){
+  const box=document.getElementById("prefsBox"); if(!box) return;
+  box.innerHTML=PREFS_LISTA.map(([k,t,d])=>{
+    const on=pref(k);
+    return `<div class="pref-row"><div><div class="pref-t">${t}</div><div class="pref-d">${d}</div></div>`+
+      `<button class="switch ${on?'on':''}" role="switch" aria-checked="${on}" onclick="setPref('${k}', ${on?'false':'true'})"><span class="knob"></span></button></div>`;
+  }).join("");
+}
+
+/* ================= EXPORTAR / IMPORTAR ================= */
+function descargar(nombre, contenido, tipo){
+  const blob=new Blob([contenido],{type:tipo});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download=nombre;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 600);
+  toast("Archivo generado ⬇️");
+}
+const numCL = v => String(v).replace(".", ","); // decimales con coma para Excel es-CL
+function exportarJSON(){
+  const respaldo={app:"entrenamiento-2026", exportado:new Date().toISOString(), altura:ALTURA, objetivo:OBJETIVO, datos:D};
+  descargar("respaldo-entrenamiento-"+hoyISO()+".json", JSON.stringify(respaldo,null,2), "application/json");
+}
+function exportarPesosCSV(){
+  let csv="fecha;peso_kg;variacion_kg;imc;categoria\n";
+  D.pesos.forEach((x,i)=>{
+    const prev=i>0 ? D.pesos[i-1].kg : null;
+    const varr=prev!==null ? (x.kg-prev) : 0;
+    const imc=x.kg/(ALTURA*ALTURA);
+    csv+=`${x.d};${numCL(x.kg)};${numCL(varr.toFixed(2))};${numCL(imc.toFixed(2))};${catIMC(imc)}\n`;
+  });
+  descargar("pesos-"+hoyISO()+".csv", "﻿"+csv, "text/csv;charset=utf-8");
+}
+function exportarCargasCSV(){
+  let csv="ejercicio;fecha;carga_kg\n"; let filas=0;
+  Object.keys(D.cargas||{}).forEach(id=>{
+    (D.cargas[id]||[]).forEach(x=>{ csv+=`${EJERCICIOS[id].n};${x.d};${numCL(x.kg)}\n`; filas++; });
+  });
+  if(!filas){ toast("Aún no registras cargas"); return; }
+  descargar("cargas-"+hoyISO()+".csv", "﻿"+csv, "text/csv;charset=utf-8");
+}
+function exportarCardioCSV(){
+  let csv="fecha;tipo;minutos;intensidad;rpe\n"; let filas=0;
+  Object.keys(D.sesiones||{}).sort().forEach(iso=>{
+    const s=D.sesiones[iso];
+    if(s && s.cardio && !s._seed){
+      csv+=`${iso};${s.cardioTipo||CARDIO_TIPO_DEF};${s.cardioMin||CARDIO_MIN_DEF};${s.cardioInt||CARDIO_INT_DEF};${s.rpe||""}\n`; filas++;
+    }
+  });
+  if(!filas){ toast("Aún no registras cardio en la app"); return; }
+  descargar("cardio-"+hoyISO()+".csv", "﻿"+csv, "text/csv;charset=utf-8");
+}
+function exportarMedidasCSV(){
+  let csv="zona;fecha;cm\n"; let filas=0;
+  (D.medidas||[]).forEach(x=>{ csv+=`Cintura;${x.d};${numCL(x.cm)}\n`; filas++; });
+  MEDIDAS_CORP.forEach(m=>{
+    ((D.medidasExtra&&D.medidasExtra[m.key])||[]).forEach(x=>{ csv+=`${m.label};${x.d};${numCL(x.cm)}\n`; filas++; });
+  });
+  if(!filas){ toast("Aún no registras medidas"); return; }
+  descargar("medidas-"+hoyISO()+".csv", "﻿"+csv, "text/csv;charset=utf-8");
+}
+function importarJSON(input){
+  const f=input.files && input.files[0];
+  if(!f) return;
+  const lector=new FileReader();
+  lector.onload=()=>{
+    try{
+      const obj=JSON.parse(lector.result);
+      const datos=obj.datos && obj.datos.pesos ? obj.datos : (obj.pesos ? obj : null);
+      if(!datos) throw new Error("formato");
+      D=datos;
+      ["sesiones","cargas","ultCarga","seriesExtra","incremento","aplicado","pospuesto","descarga","medidasExtra","prefs"].forEach(k=>{ if(!D[k]) D[k]={}; });
+      if(!D.medidas) D.medidas=[];
+      D.progresiones = Array.from(new Set([...(D.progresiones||[]), ...PROGRESIONES_INICIALES])).sort();
+      expirarDescargas();
+      sembrarHistorial(); guardar();
+      toast("Respaldo importado ✓");
+      pintarTema();
+      renderHoy(); renderDatos();
+    }catch(e){ toast("El archivo no es un respaldo válido"); }
+    input.value="";
+  };
+  lector.readAsText(f);
+}
+function renderDatos(){
+  const sesiones=Object.keys(D.sesiones||{}).length;
+  const cargas=Object.values(D.cargas||{}).reduce((a,v)=>a+v.length,0);
+  document.getElementById("datosEstado").textContent =
+    `${D.pesos.length} pesajes · ${sesiones} sesiones · ${cargas} cargas registradas` +
+    (enClaude() ? " · guardado en Claude" : " · guardado en este navegador");
+  renderTemas();
+  renderPrefs();
+  renderSync();
+}
+
+/* ================= NAVEGACIÓN ================= */
+function verVista(v){
+  vistaActual=v;
+  ["Hoy","Prog","Peso","Datos"].forEach(x=>{
+    document.getElementById("v"+x).classList.toggle("on", x===v);
+    document.getElementById("tab"+x).classList.toggle("on", x===v);
+  });
+  if(v==="Hoy") renderHoy();
+  if(v==="Prog") renderProg();
+  if(v==="Peso") renderPeso();
+  if(v==="Datos") renderDatos();
+  window.scrollTo(0,0);
+}
+
+/* ================= SINCRONIZACIÓN CON SUPABASE ================= *
+   Diseño simple:
+   - Tú creas un proyecto gratis en Supabase y una tabla "sync".
+   - En cada dispositivo pegas la URL del proyecto y la clave anon (una vez).
+     Misma URL = mismos datos = sincronizado. No hay login ni popups.
+   - El almacenamiento local sigue siendo la fuente de verdad: si Supabase
+     falla o no hay internet, la app funciona igual y no se pierde nada.
+   - Subimos solo tus datos reales (no el historial sembrado, que cada
+     dispositivo reconstruye solo) para que el paquete sea pequeño.          */
+const CLAVE_SUPA="plan2026-supa";
+const ESPACIO_DEF="entrenamiento-2026";
+let SUPA=null;                  // {url, key, espacio, conectado}
+let vistaActual="Hoy";
+let listoParaPush=false;
+let pushPend=null, sincronizando=false;
+let syncEstado={ok:0, err:false, pend:false};
+
+/* --- persistencia local del vínculo (aparte de los datos) --- */
+async function leerSupa(){
+  if(enClaude()){
+    try{ const r=await window.storage.get(CLAVE_SUPA); return r && r.value ? JSON.parse(r.value) : null; }catch(e){ return null; }
+  }
+  try{ const s=localStorage.getItem(CLAVE_SUPA); return s ? JSON.parse(s) : null; }catch(e){ return null; }
+}
+function guardarSupa(){
+  const s = SUPA ? JSON.stringify(SUPA) : "";
+  if(enClaude()){ try{ window.storage.set(CLAVE_SUPA, s); }catch(e){} }
+  try{ if(s) localStorage.setItem(CLAVE_SUPA, s); else localStorage.removeItem(CLAVE_SUPA); }catch(e){}
+}
+function syncLinked(){ return !!(SUPA && SUPA.url && SUPA.key && SUPA.conectado); }
+
+/* --- payload (solo datos reales, sin historial sembrado) --- */
+function payloadSubir(){
+  const ses={};
+  for(const iso in (D.sesiones||{})){
+    const s=D.sesiones[iso];
+    if(!s) continue;
+    if(!s._seed){
+      ses[iso]={sets:s.sets||{}, cardio:!!s.cardio};
+      if(s.cardioMin!=null) ses[iso].cardioMin=s.cardioMin;
+      if(s.cardioInt) ses[iso].cardioInt=s.cardioInt;
+      if(s.cardioTipo) ses[iso].cardioTipo=s.cardioTipo;
+      if(s.nota) ses[iso].nota=s.nota;
+      if(s.rpe!=null) ses[iso].rpe=s.rpe;
+      if(s.warmup) ses[iso].warmup=true;
+    } else if(s.nota || s.rpe!=null){
+      // sesión del historial sembrado a la que le agregaste nota/RPE: sube sólo eso
+      ses[iso]={_seed:true};
+      if(s.nota) ses[iso].nota=s.nota;
+      if(s.rpe!=null) ses[iso].rpe=s.rpe;
+    }
+  }
+  return {app:"entrenamiento-2026", pesos:D.pesos, sesiones:ses, cargas:D.cargas, ultCarga:D.ultCarga,
+    seriesExtra:D.seriesExtra||{}, incremento:D.incremento||{}, aplicado:D.aplicado||{}, pospuesto:D.pospuesto||{},
+    progresiones:D.progresiones||[], medidas:D.medidas||[], medidasExtra:D.medidasExtra||{},
+    prefs:D.prefs||{}, descarga:D.descarga||{},
+    mtime:D.mtime||new Date().toISOString()};
+}
+
+/* combina el valor de una serie entre dos dispositivos (reps/true/false) */
+function combineSet(a, b, newer){
+  const done=x=> x===true || (typeof x==="number" && x>0);
+  if(!done(a) && !done(b)) return (a||b||false);
+  if(done(a) && !done(b)) return a;
+  if(!done(a) && done(b)) return b;
+  const na=typeof a==="number"?a:null, nb=typeof b==="number"?b:null;
+  if(na!=null && nb!=null) return newer ? b : a;   // dos números: gana el más reciente
+  return na!=null ? a : b;                           // prefiere el número sobre el true heredado
+}
+
+/* --- fusión multi-dispositivo (unión; no pierde progreso) --- */
+function fusionar(base, extra){
+  if(!extra || !extra.pesos) return base;
+  const newer=(extra.mtime||"") > (base.mtime||"");
+  const pmap={}; (base.pesos||[]).forEach(x=>pmap[x.d]=x.kg);
+  (extra.pesos||[]).forEach(x=>{ if(!(x.d in pmap) || newer) pmap[x.d]=x.kg; });
+  base.pesos=Object.keys(pmap).sort().map(d=>({d, kg:pmap[d]}));
+  if(!base.sesiones) base.sesiones={};
+  const es=extra.sesiones||{};
+  for(const iso in es){
+    const r=es[iso];
+    if(!base.sesiones[iso]) base.sesiones[iso]={sets:{}, cardio:false};
+    const L=base.sesiones[iso];
+    L.cardio = L.cardio || !!r.cardio;
+    if(r.cardioMin!=null && (newer || L.cardioMin==null)) L.cardioMin=r.cardioMin;
+    if(r.cardioInt && (newer || !L.cardioInt)) L.cardioInt=r.cardioInt;
+    if(r.cardioTipo && (newer || !L.cardioTipo)) L.cardioTipo=r.cardioTipo;
+    if(r.nota && (newer || !L.nota)) L.nota=r.nota;
+    if(r.rpe!=null && (newer || L.rpe==null)) L.rpe=r.rpe;
+    L.warmup = L.warmup || !!r.warmup;
+    const rs=r.sets||{};
+    for(const ej in rs){
+      const ra=rs[ej]||[], la=L.sets[ej]||[], len=Math.max(ra.length, la.length), out=[];
+      for(let i=0;i<len;i++) out[i]=combineSet(la[i], ra[i], newer);
+      L.sets[ej]=out;
+    }
+  }
+  if(!base.cargas) base.cargas={};
+  const ec=extra.cargas||{};
+  for(const ej in ec){
+    if(!base.cargas[ej]) base.cargas[ej]=[];
+    const dmap={}; base.cargas[ej].forEach(x=>dmap[x.d]=x.kg);
+    (ec[ej]||[]).forEach(x=>{ if(!(x.d in dmap) || newer) dmap[x.d]=x.kg; });
+    base.cargas[ej]=Object.keys(dmap).sort().map(d=>({d, kg:dmap[d]}));
+  }
+  if(!base.ultCarga) base.ultCarga={};
+  const eu=extra.ultCarga||{};
+  for(const ej in eu){ if(!(ej in base.ultCarga) || newer) base.ultCarga[ej]=eu[ej]; }
+  ["seriesExtra","incremento","aplicado","pospuesto","descarga"].forEach(k=>{
+    base[k]=base[k]||{}; const ex=extra[k]||{};
+    for(const id in ex){ if(!(id in base[k]) || newer) base[k][id]=ex[id]; }
+  });
+  const mmap={}; (base.medidas||[]).forEach(x=>mmap[x.d]=x.cm);
+  (extra.medidas||[]).forEach(x=>{ if(!(x.d in mmap) || newer) mmap[x.d]=x.cm; });
+  base.medidas=Object.keys(mmap).sort().map(d=>({d, cm:mmap[d]}));
+  // medidas corporales (pecho, cadera, brazo, muslo)
+  if(!base.medidasExtra) base.medidasExtra={};
+  const eme=extra.medidasExtra||{};
+  for(const key in eme){
+    const bm={}; (base.medidasExtra[key]||[]).forEach(x=>bm[x.d]=x.cm);
+    (eme[key]||[]).forEach(x=>{ if(!(x.d in bm) || newer) bm[x.d]=x.cm; });
+    base.medidasExtra[key]=Object.keys(bm).sort().map(d=>({d, cm:bm[d]}));
+  }
+  // preferencias (gana el más reciente por clave)
+  base.prefs=base.prefs||{}; const ep=extra.prefs||{};
+  for(const k in ep){ if(!(k in base.prefs) || newer) base.prefs[k]=ep[k]; }
+  base.progresiones = Array.from(new Set([...(base.progresiones||[]), ...(extra.progresiones||[])])).sort();
+  if((extra.mtime||"") > (base.mtime||"")) base.mtime=extra.mtime;
+  return base;
+}
+
+/* --- REST de Supabase (PostgREST) --- */
+function apiHeaders(){ return {apikey:SUPA.key, Authorization:"Bearer "+SUPA.key, "Content-Type":"application/json"}; }
+async function supaLeer(){
+  const u=SUPA.url+"/rest/v1/sync?id=eq."+encodeURIComponent(SUPA.espacio)+"&select=data";
+  const r=await fetch(u, {headers:apiHeaders()});
+  if(!r.ok) throw new Error("leer "+r.status+" "+(await r.text()).slice(0,140));
+  const j=await r.json();
+  return (j && j[0]) ? j[0].data : null;
+}
+async function supaEscribir(){
+  D.mtime=new Date().toISOString();
+  const body=[{id:SUPA.espacio, data:payloadSubir(), updated_at:new Date().toISOString()}];
+  const r=await fetch(SUPA.url+"/rest/v1/sync?on_conflict=id", {method:"POST",
+    headers:Object.assign({}, apiHeaders(), {Prefer:"resolution=merge-duplicates,return=minimal"}),
+    body:JSON.stringify(body)});
+  if(!r.ok) throw new Error("escribir "+r.status+" "+(await r.text()).slice(0,140));
+  return true;
+}
+async function intercambiar(){
+  const remoto=await supaLeer();
+  if(remoto) fusionar(D, remoto);
+  guardar();
+  await supaEscribir();
+}
+
+/* --- sincronización --- */
+async function pushNube(inmediato){
+  if(!syncLinked()) return;
+  const hacer=async ()=>{
+    if(sincronizando) return;
+    sincronizando=true; syncEstado.pend=true; actualizarEstadoSync();
+    try{ await supaEscribir(); syncEstado.ok=Date.now(); syncEstado.err=false; }
+    catch(e){ syncEstado.err=true; console.error("push", e); }
+    finally{ sincronizando=false; syncEstado.pend=false; actualizarEstadoSync(); }
+  };
+  clearTimeout(pushPend);
+  if(inmediato) return hacer();
+  pushPend=setTimeout(hacer, 3500);
+}
+async function sincronizar(mostrar){
+  if(!syncLinked()){ if(mostrar) toast("Conecta Supabase primero"); return; }
+  if(sincronizando){ return; }
+  sincronizando=true; syncEstado.pend=true; actualizarEstadoSync();
+  try{
+    const remoto=await supaLeer();
+    if(remoto) fusionar(D, remoto);
+    guardar();
+    await supaEscribir();
+    syncEstado.ok=Date.now(); syncEstado.err=false;
+    refrescarVista();
+    if(mostrar) toast("Sincronizado ✓");
+  }catch(e){
+    syncEstado.err=true;
+    if(mostrar) toast("No se pudo sincronizar: "+((e&&e.message)||e));
+    console.error("sync", e);
+  }finally{ sincronizando=false; syncEstado.pend=false; actualizarEstadoSync(); }
+}
+async function conectarSupa(){
+  const iu=document.getElementById("inUrl"), ik=document.getElementById("inKey"), ie=document.getElementById("inEsp");
+  const url=(iu&&iu.value||"").trim().replace(/\/+$/,"");
+  const key=(ik&&ik.value||"").trim();
+  const esp=((ie&&ie.value||"").trim())||ESPACIO_DEF;
+  if(!/^https:\/\/.+/.test(url)){ toast("La URL debe empezar con https://"); return; }
+  if(!key){ toast("Pega la clave anon"); return; }
+  SUPA={url, key, espacio:esp, conectado:false}; guardarSupa();
+  toast("Conectando…"); syncEstado.pend=true; actualizarEstadoSync();
+  try{
+    await intercambiar();
+    SUPA.conectado=true; guardarSupa(); listoParaPush=true;
+    syncEstado.ok=Date.now(); syncEstado.err=false; syncEstado.pend=false;
+    renderSync(); refrescarVista();
+    toast("Conectado ✓");
+  }catch(e){
+    syncEstado.err=true; syncEstado.pend=false;
+    renderSync();
+    toast("No se pudo conectar: "+((e&&e.message)||e));
+    console.error("conectar", e);
+  }
+}
+function desconectarSupa(){
+  if(!confirm("¿Desconectar Supabase? Tus datos siguen guardados en este dispositivo; podrás reconectar cuando quieras.")) return;
+  if(SUPA){ SUPA.conectado=false; guardarSupa(); }
+  syncEstado={ok:0, err:false, pend:false};
+  renderSync(); toast("Supabase desconectado");
+}
+
+/* --- UI --- */
+function refrescarVista(){
+  pintarTema(); // por si el tema cambió en otro dispositivo (sync)
+  if(vistaActual==="Hoy") renderHoy();
+  else if(vistaActual==="Prog") renderProg();
+  else if(vistaActual==="Peso") renderPeso();
+  else if(vistaActual==="Datos") renderDatos();
+}
+function estadoTxt(){
+  if(syncEstado.pend) return "sincronizando…";
+  if(syncEstado.err)  return "sin conexión con Supabase (tus datos están a salvo aquí)";
+  if(syncEstado.ok)   return "al día · última vez "+new Date(syncEstado.ok).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"});
+  return "conectado";
+}
+function claseDot(){ return syncEstado.pend?"pend":(syncEstado.err?"err":(syncEstado.ok?"ok":"")); }
+function actualizarEstadoSync(){
+  const t=document.getElementById("syncEstadoTxt"); if(t) t.textContent=estadoTxt();
+  const d=document.getElementById("syncDot"); if(d) d.className="sync-dot "+claseDot();
+}
+function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function renderSync(){
+  const box=document.getElementById("syncBox"); if(!box) return;
+  const SQL=
+`create table if not exists public.sync (
+  id text primary key,
+  data jsonb,
+  updated_at timestamptz default now()
+);
+alter table public.sync enable row level security;
+drop policy if exists "sync_all_anon" on public.sync;
+create policy "sync_all_anon" on public.sync
+  for all to anon using (true) with check (true);
+grant select, insert, update on public.sync to anon;`;
+  let html="";
+  if(syncLinked()){
+    html+=`<div class="nota"><b>Supabase conectado</b><span class="sync-dot ${claseDot()}" id="syncDot"></span><br>`+
+      `Estado: <span id="syncEstadoTxt">${estadoTxt()}</span><br>`+
+      `Proyecto: <b>${esc(SUPA.url.replace(/^https:\/\//,""))}</b> · espacio: <b>${esc(SUPA.espacio)}</b></div>`+
+      `<button class="cardio-btn" onclick="sincronizar(true)">🔄 Sincronizar ahora</button>`+
+      `<button class="cardio-btn danger" onclick="desconectarSupa()">Desconectar Supabase</button>`;
+  } else {
+    const u=SUPA&&SUPA.url?esc(SUPA.url):"", k=SUPA&&SUPA.key?esc(SUPA.key):"", e=SUPA&&SUPA.espacio?esc(SUPA.espacio):ESPACIO_DEF;
+    html+=`<div class="nota"><b>Sincroniza con tu base Supabase (gratis).</b> Pega la URL del proyecto y la clave anon; en cada dispositivo lo mismo y quedan sincronizados. Sin login ni popups.</div>`+
+      `<div class="nota" style="border-style:solid">`+
+        `<b>Configuración de una sola vez</b>`+
+        `<ol style="margin:8px 0 0; padding-left:18px; line-height:1.55">`+
+        `<li>Crea un proyecto gratis en <b>supabase.com</b>.</li>`+
+        `<li>Abre <b>SQL Editor</b>, pega esto y pulsa <b>Run</b>:</li>`+
+        `</ol>`+
+        `<div class="code-box" style="margin-top:6px; white-space:pre-wrap">${esc(SQL)}</div>`+
+        `<div style="margin-top:8px">3. En <b>Project Settings → API</b> copia la <b>Project URL</b> y la clave <b>anon public</b>, y pégalas abajo.</div>`+
+      `</div>`+
+      `<div class="bloque-titulo">Project URL</div>`+
+      `<input class="code-in" id="inUrl" placeholder="https://xxxxx.supabase.co" value="${u}" autocomplete="off" autocapitalize="off" spellcheck="false">`+
+      `<div class="bloque-titulo">Clave anon public</div>`+
+      `<input class="code-in" id="inKey" placeholder="eyJhbGciOi..." value="${k}" autocomplete="off" autocapitalize="off" spellcheck="false">`+
+      `<div class="bloque-titulo">Espacio (déjalo así)</div>`+
+      `<input class="code-in" id="inEsp" value="${e}" autocomplete="off" autocapitalize="off" spellcheck="false">`+
+      `<button class="cardio-btn" onclick="conectarSupa()">🔗 Conectar</button>`;
+    if(syncEstado.err) html+=`<div class="nota" style="border-color:var(--danger); color:var(--danger)">No se pudo conectar la última vez. Revisa la URL, la clave anon, y que hayas ejecutado el SQL de arriba en tu proyecto.</div>`;
+  }
+  box.innerHTML=html;
+}
+
+/* ================= INICIO ================= */
+(async ()=>{
+  await cargar();
+  pintarTema();
+  renderHoy();
+  if(syncLinked()){
+    try{ await sincronizar(false); }
+    catch(e){ syncEstado.err=true; console.warn("auto-sync inicial falló", e); }
+  }
+  listoParaPush=true;
+})();
+</script>
+</body>
+</html>
