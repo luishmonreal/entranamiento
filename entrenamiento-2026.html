@@ -631,6 +631,7 @@ const D_DEFAULT = () => ({
   medidas:[],           // [{d, cm}] cintura
   medidasExtra:{},      // {pecho:[{d,cm}], cadera:[], brazo:[], muslo:[]}
   prefs:{},             // funcionalidades activadas/desactivadas (por defecto todas activas)
+  prefsMeta:{},         // clave de preferencia -> marca de tiempo del último cambio (sync por clave)
   descarga:{}           // fpecho: {prev, hasta} semana de descarga activa
 });
 
@@ -649,7 +650,7 @@ async function leerDatos(){
 async function cargar(){
   const datos = await leerDatos();
   D = datos && datos.pesos ? datos : D_DEFAULT();
-  ["sesiones","cargas","ultCarga","seriesExtra","incremento","aplicado","pospuesto","descarga","medidasExtra","prefs"].forEach(k=>{ if(!D[k]) D[k]={}; });
+  ["sesiones","cargas","ultCarga","seriesExtra","incremento","aplicado","pospuesto","descarga","medidasExtra","prefs","prefsMeta"].forEach(k=>{ if(!D[k]) D[k]={}; });
   if(!D.medidas) D.medidas=[];
   D.progresiones = Array.from(new Set([...(D.progresiones||[]), ...PROGRESIONES_INICIALES])).sort();
   expirarDescargas();
@@ -2169,6 +2170,7 @@ function setTema(k){
   if(!TEMAS[k]) return;
   if(!D.prefs) D.prefs={};
   D.prefs.tema=k;
+  tocarPref("tema");
   guardar();
   pintarTema();
   refrescarVista();
@@ -2209,7 +2211,8 @@ function aplicarEscala(){
   const on=!!(D&&D.prefs&&D.prefs.textogrande===true);
   document.documentElement.style.setProperty('--fs-scale', on?'1.15':'1');
 }
-function setPref(k, val){ if(!D.prefs) D.prefs={}; D.prefs[k]=val; guardar(); renderPrefs(); refrescarVista(); }
+function tocarPref(k){ if(!D.prefsMeta) D.prefsMeta={}; D.prefsMeta[k]=new Date().toISOString(); }
+function setPref(k, val){ if(!D.prefs) D.prefs={}; D.prefs[k]=val; tocarPref(k); guardar(); renderPrefs(); refrescarVista(); }
 function renderPrefs(){
   const box=document.getElementById("prefsBox"); if(!box) return;
   box.innerHTML=PREFS_LISTA.map(([k,t,d,optIn])=>{
@@ -2286,7 +2289,7 @@ function importarJSON(input){
         toast("Importación cancelada"); input.value=""; return;
       }
       D=datos;
-      ["sesiones","cargas","ultCarga","seriesExtra","incremento","aplicado","pospuesto","descarga","medidasExtra","prefs"].forEach(k=>{ if(!D[k]) D[k]={}; });
+      ["sesiones","cargas","ultCarga","seriesExtra","incremento","aplicado","pospuesto","descarga","medidasExtra","prefs","prefsMeta"].forEach(k=>{ if(!D[k]) D[k]={}; });
       if(!D.medidas) D.medidas=[];
       D.progresiones = Array.from(new Set([...(D.progresiones||[]), ...PROGRESIONES_INICIALES])).sort();
       expirarDescargas();
@@ -2379,7 +2382,7 @@ function payloadSubir(){
   return {app:"entrenamiento-2026", pesos:D.pesos, sesiones:ses, cargas:D.cargas, ultCarga:D.ultCarga,
     seriesExtra:D.seriesExtra||{}, incremento:D.incremento||{}, aplicado:D.aplicado||{}, pospuesto:D.pospuesto||{},
     progresiones:D.progresiones||[], medidas:D.medidas||[], medidasExtra:D.medidasExtra||{},
-    prefs:D.prefs||{}, descarga:D.descarga||{},
+    prefs:D.prefs||{}, prefsMeta:D.prefsMeta||{}, descarga:D.descarga||{},
     mtime:D.mtime||new Date().toISOString()};
 }
 
@@ -2447,9 +2450,23 @@ function fusionar(base, extra){
     (eme[key]||[]).forEach(x=>{ if(!(x.d in bm) || newer) bm[x.d]=x.cm; });
     base.medidasExtra[key]=Object.keys(bm).sort().map(d=>({d, cm:bm[d]}));
   }
-  // preferencias (gana el más reciente por clave)
-  base.prefs=base.prefs||{}; const ep=extra.prefs||{};
-  for(const k in ep){ if(!(k in base.prefs) || newer) base.prefs[k]=ep[k]; }
+  // preferencias: gana el más reciente por clave (marca de tiempo propia; si falta, cae al mtime del documento)
+  base.prefs=base.prefs||{}; base.prefsMeta=base.prefsMeta||{};
+  const ep=extra.prefs||{}, epm=extra.prefsMeta||{};
+  const clavesPref=new Set([...Object.keys(base.prefs), ...Object.keys(ep)]);
+  clavesPref.forEach(k=>{
+    if(!(k in ep)) return;                 // la clave solo existe localmente: se conserva
+    const tb=base.prefsMeta[k], te=epm[k];
+    let tomarExtra;
+    if(te!=null && tb!=null)      tomarExtra = te > tb;                    // ambos con marca: gana el más reciente
+    else if(te!=null)             tomarExtra = true;                       // solo extra registró un cambio explícito
+    else if(tb!=null)             tomarExtra = false;                      // solo base registró un cambio explícito
+    else                          tomarExtra = !(k in base.prefs) || newer;// sin marcas: comportamiento previo (legado)
+    if(tomarExtra){
+      base.prefs[k]=ep[k];
+      if(te!=null) base.prefsMeta[k]=te;
+    }
+  });
   base.progresiones = Array.from(new Set([...(base.progresiones||[]), ...(extra.progresiones||[])])).sort();
   if((extra.mtime||"") > (base.mtime||"")) base.mtime=extra.mtime;
   return base;
