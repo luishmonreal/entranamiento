@@ -142,6 +142,7 @@
   .peso-form button{padding:13px 18px; border-radius:12px; border:none; background:var(--mint);
     color:var(--on-accent); font-weight:800; font-size:15px;}
   canvas{width:100%; display:block;}
+  #chartPeso{height:220px;}
   .peso-lista{padding:0 14px;}
   .peso-row{display:flex; justify-content:space-between; padding:9px 4px; border-bottom:1px solid var(--line);
     font-size:14.5px;}
@@ -332,6 +333,36 @@
   .sec[open]>summary::after{transform:rotate(180deg);}
   .sec>summary:hover{color:var(--mint);}
 
+  /* ===== Series: extras del día y ejercicios por lado ===== */
+  .set-chip.medio{border-color:var(--amber); color:var(--amber); border-style:dashed; font-size:var(--fs-sm);}
+  .set-chip.extra{border-style:dashed; border-color:var(--mint-dark); color:var(--mint);}
+  .set-pill.extra{border-style:dashed;}
+  .ej-lado{margin-top:8px; color:var(--mint); font-size:var(--fs-xs); line-height:1.45;}
+  .ej-lado b{color:var(--text);}
+
+  /* Acciones rápidas (marcar serie / día completo) */
+  .acc-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
+  .acc-btn{flex:1 1 46%; min-width:132px; padding:12px 10px; border-radius:12px; font-size:var(--fs-sm);
+    font-weight:700; border:1.5px solid var(--line); background:var(--card2); color:var(--text); line-height:1.25;}
+  .acc-btn.pri{border-color:var(--mint); background:var(--mint); color:var(--on-accent);}
+  .acc-btn.ghost{background:transparent; color:var(--muted);}
+  .acc-btn.hecho{border-color:var(--mint-dark); background:transparent; color:var(--mint);}
+  .acc-btn.warn{border-color:var(--line); background:transparent; color:var(--danger);}
+  .dia-acciones{margin:10px 18px 0; display:flex; gap:8px; flex-wrap:wrap;}
+  .dia-acciones .acc-btn{padding:13px 10px; font-size:var(--fs-md);}
+
+  /* Gráficos de seguimiento */
+  .g-chips{display:flex; flex-wrap:wrap; gap:6px; padding:10px 18px 0;}
+  .g-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px;}
+  .g-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:8px;}
+  .g-head span{font-weight:700; font-size:var(--fs-md);}
+  .g-head b{color:var(--mint); font-size:var(--fs-md); white-space:nowrap;}
+  .g-leg{display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; color:var(--muted); font-size:var(--fs-xs);}
+  .g-leg i{display:inline-block; width:12px; height:3px; border-radius:2px; vertical-align:middle; margin-right:5px;}
+  .g-lectura{margin-top:8px; color:var(--muted); font-size:var(--fs-xs); line-height:1.5;}
+  .g-lectura b{color:var(--text);}
+  .g-vacio{color:var(--muted); font-size:var(--fs-sm); line-height:1.5; padding:6px 2px;}
+
   /* Micro-animaciones de logro y guías */
   @keyframes pillPop{0%{transform:scale(.72);opacity:.4}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
   .set-pill.pop{animation:pillPop .34s cubic-bezier(.34,1.56,.64,1);}
@@ -361,6 +392,7 @@
     <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
     <div class="prog-pct" id="progPct"></div>
   </div>
+  <div class="dia-acciones" id="diaAcciones"></div>
   <div class="imps" id="impsDia"></div>
   <div class="dias" id="diasChips"></div>
   <div class="lista" id="listaEjercicios"></div>
@@ -380,6 +412,12 @@
   <div class="stat-row" style="padding-top:0;">
     <div class="stat"><div class="num" id="stTon">—</div><div class="lbl">kg movidos esta semana (tonelaje)</div></div>
     <div class="stat"><div class="num" id="stTonPrev">—</div><div class="lbl">semana pasada</div></div>
+  </div>
+
+  <div id="graficosSec">
+    <div class="bloque-titulo" style="margin:16px 20px 0;">Gráficos de seguimiento</div>
+    <div class="g-chips" id="grafChips"></div>
+    <div class="lista" id="graficosBox"></div>
   </div>
 
   <div id="heatmapSec">
@@ -479,6 +517,7 @@
       <button class="cardio-btn" onclick="exportarCargasCSV()">🏋️ Cargas para Excel/Sheets (CSV)</button>
       <button class="cardio-btn" onclick="exportarCardioCSV()">🚴 Cardio para Excel/Sheets (CSV)</button>
       <button class="cardio-btn" onclick="exportarMedidasCSV()">📏 Medidas para Excel/Sheets (CSV)</button>
+      <button class="cardio-btn" onclick="exportarSemanalCSV()">📈 Resumen semanal para Excel/Sheets (CSV)</button>
       <div class="bloque-titulo">Restaurar</div>
       <div class="nota">Importa un respaldo JSON exportado antes. Reemplaza todos los datos de este dispositivo.</div>
       <input type="file" id="inImportar" accept=".json,application/json" style="display:none" onchange="importarJSON(this)">
@@ -816,6 +855,20 @@ function segAguante(e){
   return m ? parseInt(m[1],10) : 0;
 }
 
+/* ===== Ejercicios "por lado" (plancha lateral, remo a 1 brazo, zancadas…) =====
+   El plan los anota como "c/l" (cada lado) o "c/p" (cada pierna): las reps o los
+   segundos son POR LADO, así que una serie sólo se cierra cuando hiciste los dos. */
+function porLado(e){ return /c\/l|c\/p|cada lado|cada pierna|por lado/i.test(String(e && e.r)); }
+function LADOS(e){ return /c\/p/i.test(String(e.r)) ? ["pierna izquierda","pierna derecha"] : ["lado izquierdo","lado derecho"]; }
+function ladoArt(e){ return /c\/p/i.test(String(e.r)) ? "la " : "el "; }
+const CAMBIO_LADO_S=10;               // segundos para cambiar de lado en los aguantes
+const mediaSerie = new Set();         // series con el primer lado hecho (sólo durante la sesión)
+function claveLado(id, i){ return isoDeDia(diaVista)+"|"+id+"|"+i; }
+function limpiarLados(id){
+  const pre=isoDeDia(diaVista)+"|"+id+"|";
+  Array.from(mediaSerie).forEach(k=>{ if(k.indexOf(pre)===0) mediaSerie.delete(k); });
+}
+
 /* ===== Progresión: rangos, series, sugerencias ===== */
 const DEFAULT_INC = { press:2, remoZ:2, remo1:2, exttri:1, curl:1, pull:1, latr:1, sent:2.5, zanc:2.5, pmr:2.5, puente:2.5,
   phom:1, gem:2.5, bulg:2, martillo:1 };
@@ -1010,17 +1063,19 @@ function renderHoy(){
   document.getElementById("focoDia").textContent = plan.foco;
 
   // resumen
-  let totalSets=0, hechos=0;
+  let totalSets=0, hechos=0, extraSets=0;
   ejDia.forEach(id=>{
     const ns=numSeries(id);
     totalSets+=ns;
     const arr=ses.sets[id]||[];
-    hechos+=Math.min(arr.filter(hecho).length, ns);
+    const h=arr.filter(hecho).length;
+    hechos+=Math.min(h, ns);
+    if(h>ns) extraSets+=h-ns;              // series de más que hiciste hoy
   });
   const res=document.getElementById("resumenDia");
   if(ejDia.length>0){
     res.style.display="flex";
-    res.innerHTML=`<span>Series completadas</span><b>${hechos} / ${totalSets}</b>`;
+    res.innerHTML=`<span>Series completadas</span><b>${hechos} / ${totalSets}${extraSets?` <span style="color:var(--amber)">+${extraSets} extra</span>`:""}</b>`;
   } else res.style.display="none";
 
   // Días entrenando (racha total)
@@ -1057,6 +1112,7 @@ function renderHoy(){
       pct===100 ? `✅ <b>Sesión completa</b> · ${hechProg}/${totProg}` : `<b>${pct}%</b> de la sesión · ${hechProg}/${totProg}`;
   } else progWrap.style.display="none";
 
+  renderAccionesDia(plan, ejDia, ses, isoDia, totalSets, hechos);
   renderDias();
 
   // Implementos que necesitas hoy
@@ -1093,7 +1149,11 @@ function renderHoy(){
     const ns=numSeries(id);
     const arr=ses.sets[id] || (ses.sets[id]=Array(ns).fill(false));
     while(arr.length<ns) arr.push(false);            // ajusta si se agregaron series
-    const done=arr.filter(hecho).length>=ns;
+    const hechosEj=arr.filter(hecho).length;
+    const done=hechosEj>=ns;
+    const slots=Math.max(ns, arr.length);          // incluye las series extra de hoy
+    const extras=arr.filter((v,i)=>i>=ns && hecho(v)).length;
+    const pl=porLado(e), L=pl?LADOS(e):null, art=pl?ladoArt(e):"";
     const sug=pref('sugerencias')?sugerencia(id):null;
     const card=document.createElement("div");
     card.id="card_"+id;
@@ -1102,31 +1162,51 @@ function renderHoy(){
     // Tarjeta colapsada si ya está completo (toca para expandir)
     if(done && !expandidos.has(id) && !sug){
       const kgTxt = e.carga && D.ultCarga[id] ? " · "+D.ultCarga[id]+" kg" : "";
+      const exTxt = extras>0 ? " (+"+extras+" extra)" : "";
       card.classList.add("ej-colapsado");
       card.onclick=()=>{ expandidos.add(id); renderHoy(); };
       card.innerHTML=`<div class="ej-head"><div>
           <div class="ej-nombre">✅ ${e.n}</div>
-          <div class="ej-meta">${ns} series completadas${kgTxt} · toca para ver o editar</div>
+          <div class="ej-meta">${hechosEj} series completadas${exTxt}${kgTxt} · toca para ver o editar</div>
         </div></div>`;
       cont.appendChild(card);
       return;
     }
 
     let setsHtml="";
-    for(let i=0;i<ns;i++){
-      const v=arr[i];
+    for(let i=0;i<slots;i++){
+      const v=arr[i], ex=i>=ns, exLbl=ex?" (extra)":"";
       if(hecho(v)){
         const cl=claseSet(v,r), n=numVal(v,r), fuego=(n>=r.high)?" 🔥":"";
-        setsHtml+=`<span class="set-pill ${cl}" role="group" aria-label="Serie ${i+1}: ${n} repeticiones">`+
+        const uni=r.tiempo?"segundos":"repeticiones", porL=pl?" por lado":"";
+        setsHtml+=`<span class="set-pill ${cl}${ex?' extra':''}" role="group" aria-label="Serie ${i+1}${exLbl}: ${n} ${uni}${porL}">`+
           `<button class="mini x" onclick="resetSet('${id}',${i})" title="Reiniciar serie" aria-label="Reiniciar serie ${i+1}">✕</button>`+
-          `<button class="mini" onclick="ajustarRep('${id}',${i},${-r.paso})" aria-label="Quitar una repetición a la serie ${i+1}">−</button>`+
-          `<button class="val" onclick="ajustarRep('${id}',${i},${r.paso})" aria-label="Serie ${i+1}, ${n} repeticiones, sumar una">${n}${fuego}</button>`+
-          `<button class="mini" onclick="ajustarRep('${id}',${i},${r.paso})" aria-label="Sumar una repetición a la serie ${i+1}">＋</button>`+
+          `<button class="mini" onclick="ajustarRep('${id}',${i},${-r.paso})" aria-label="Quitar a la serie ${i+1}">−</button>`+
+          `<button class="val" onclick="ajustarRep('${id}',${i},${r.paso})" title="${n} ${uni}${porL}" aria-label="Serie ${i+1}, ${n} ${uni}${porL}, sumar">${n}${fuego}</button>`+
+          `<button class="mini" onclick="ajustarRep('${id}',${i},${r.paso})" aria-label="Sumar a la serie ${i+1}">＋</button>`+
         `</span>`;
       } else {
-        setsHtml+=`<button class="set-chip" onclick="marcarSet('${id}',${i})" aria-label="Marcar serie ${i+1} como hecha">${i+1}</button>`;
+        const medio=pl && mediaSerie.has(claveLado(id,i));
+        const lbl=medio ? `Serie ${i+1}: falta ${art}${L[1]}` : `Marcar serie ${i+1}${exLbl} como hecha`;
+        setsHtml+=`<button class="set-chip${ex?' extra':''}${medio?' medio':''}" onclick="marcarSet('${id}',${i})"`+
+          ` title="${medio?'Falta '+L[1]:''}" aria-label="${lbl}">${medio?'½':(i+1)}</button>`;
       }
     }
+    const ladoHtml = pl
+      ? `<div class="ej-lado">↔ <b>Cuenta por lado:</b> ${r.tiempo?segAguante(e)+" s":e.r.replace(/\s*c\/[lp].*$/i,"")+" reps"} con ${art}${L[0]} y otro tanto con ${art}${L[1]}. La serie se cierra recién con los dos lados (dos toques).</div>`
+      : "";
+
+    // Acciones rápidas: marcar toda la serie de una vez / registrar series de más
+    const faltan=slots-hechosEj;
+    let accHtml="";
+    if(!done){
+      accHtml+=`<button class="acc-btn pri" onclick="completarEjercicio('${id}')">✅ Marcar serie completa${hechosEj>0?" · faltan "+faltan:""}</button>`;
+    } else {
+      accHtml+=`<button class="acc-btn hecho" onclick="agregarSerieDia('${id}')">＋ Hice una serie más</button>`;
+      accHtml+=`<button class="acc-btn ghost" onclick="colapsarEj('${id}')">Listo, ocultar</button>`;
+    }
+    if(arr.length>ns && !hecho(arr[arr.length-1]))
+      accHtml+=`<button class="acc-btn warn" onclick="quitarSerieDia('${id}')">− Quitar serie extra</button>`;
 
     let cargaHtml="";
     if(e.carga){
@@ -1146,8 +1226,8 @@ function renderHoy(){
     const seg=segAguante(e);
     let holdHtml="";
     if(seg>0){
-      const lado = /c\/l/i.test(e.r) ? " (por lado)" : "";
-      holdHtml=`<button class="hold-btn" onclick="iniciarAguante('${id}')">▶ Iniciar aguante · ${seg} s${lado}</button>`;
+      const lado = pl ? ` s por lado · los 2 lados seguidos` : " s";
+      holdHtml=`<button class="hold-btn" onclick="iniciarAguante('${id}')">▶ Iniciar aguante · ${seg}${lado}</button>`;
     }
     const sugHtml = sug ? `<div class="prog-sug">⬆ <b>Listo para subir:</b> ${sug.texto}
         <div class="row2" style="margin-top:8px">
@@ -1165,6 +1245,8 @@ function renderHoy(){
       <div class="ej-tip">💡 ${e.tip} · <span style="color:var(--muted)">se marca con tus reps de la última sesión · ajusta con −/＋</span></div>
       ${tecnicaHtml(id)}
       <div class="sets">${setsHtml}</div>
+      ${ladoHtml}
+      <div class="acc-row">${accHtml}</div>
       ${holdHtml}
       ${cargaHtml}
       ${descargaHtml(id)}
@@ -1226,6 +1308,107 @@ function renderHoy(){
   }
 }
 
+/* ===== Acciones rápidas del día: marcar día completo / vaciar el día ===== */
+function renderAccionesDia(plan, ejDia, ses, isoDia, totalSets, hechos){
+  const box=document.getElementById("diaAcciones"); if(!box) return;
+  if(ejDia.length===0 && plan.cardio===0){ box.style.display="none"; box.innerHTML=""; return; }
+  box.style.display="flex";
+  const completo = sesionCompleta(diaVista, ses, isoDia);
+  const algo = hechos>0 || ses.cardio || ses.warmup;
+  let h="";
+  if(completo){
+    h+=`<button class="acc-btn hecho" onclick="verVista('Prog')">✅ Día completo · mira tu avance</button>`;
+  } else {
+    h+=`<button class="acc-btn pri" onclick="marcarDiaCompleto()">✅ Marcar día completo</button>`;
+  }
+  if(algo) h+=`<button class="acc-btn warn" onclick="vaciarDia()">↩︎ Vaciar el día</button>`;
+  box.innerHTML=h;
+}
+/* Copia de seguridad del día para el botón Deshacer */
+function snapDia(iso){ return D.sesiones[iso] ? JSON.stringify(D.sesiones[iso]) : null; }
+function restaurarDia(iso, snap){
+  if(snap==null) delete D.sesiones[iso]; else D.sesiones[iso]=JSON.parse(snap);
+  mediaSerie.clear(); expandidos.clear();
+  guardar(); renderHoy();
+}
+/* Marca de una vez todas las series del día (con tus reps de la última sesión), el
+   calentamiento y el cardio. Lo que ya estaba marcado se respeta tal cual. */
+function marcarDiaCompleto(){
+  const plan=PLAN[diaVista], iso=isoDeDia(diaVista);
+  const ejDia=plan.ej.filter(id=>ejActivo(id, iso));
+  if(ejDia.length===0 && plan.cardio===0){ toast("Hoy toca descansar 💤"); return; }
+  const snap=snapDia(iso);
+  const ses=getSesion(diaVista);
+  let n=0;
+  ejDia.forEach(id=>{
+    const ns=numSeries(id);
+    const arr=ses.sets[id] || (ses.sets[id]=Array(ns).fill(false));
+    while(arr.length<ns) arr.push(false);
+    for(let i=0;i<arr.length;i++) if(!hecho(arr[i])){ arr[i]=repsPrevias(id,i); n++; }
+    limpiarLados(id);
+    registrarCargaSiHay(id);
+  });
+  if(plan.cardio>0 && !ses.cardio){
+    ses.cardio=true;
+    if(ses.cardioMin==null) ses.cardioMin=CARDIO_MIN_DEF;
+    if(!ses.cardioInt) ses.cardioInt=(plan.cardioIntDef||CARDIO_INT_DEF);
+    if(!ses.cardioTipo) ses.cardioTipo=CARDIO_TIPO_DEF;
+  }
+  if(ejDia.length>0 && pref('warmup')) ses.warmup=true;
+  guardar(); timerStop(); expandidos.clear(); vibrar([14,45,14]);
+  renderHoy();
+  toastUndo(n>0 ? `✅ Día completo · ${n} series marcadas` : "✅ Día completo", ()=>restaurarDia(iso, snap));
+}
+/* Borra todo lo registrado del día (con opción de deshacer). Conserva la nota. */
+function vaciarDia(){
+  const iso=isoDeDia(diaVista);
+  if(!D.sesiones[iso]){ toast("No hay nada registrado este día"); return; }
+  const snap=snapDia(iso);
+  const s=D.sesiones[iso];
+  const nuevo={sets:{}, cardio:false};
+  if(s.nota) nuevo.nota=s.nota;          // las notas no se pierden al vaciar
+  D.sesiones[iso]=nuevo;
+  guardar(); timerStop(); mediaSerie.clear(); expandidos.clear();
+  renderHoy();
+  toastUndo("Día vaciado", ()=>restaurarDia(iso, snap));
+}
+/* ===== Acciones rápidas por ejercicio ===== */
+function completarEjercicio(id){
+  const e=EJERCICIOS[id]; if(!e) return;
+  const iso=isoDeDia(diaVista);
+  const snap=snapDia(iso);
+  const ses=getSesion(diaVista);
+  const ns=numSeries(id);
+  const arr=ses.sets[id] || (ses.sets[id]=Array(ns).fill(false));
+  while(arr.length<ns) arr.push(false);
+  let n=0;
+  for(let i=0;i<arr.length;i++) if(!hecho(arr[i])){ arr[i]=repsPrevias(id,i); n++; }
+  limpiarLados(id);
+  registrarCargaSiHay(id);
+  guardar(); timerStop(); expandidos.add(id); vibrar([14,45,14]);
+  renderHoy();
+  toastUndo(`✓ ${e.n} · ${n} ${n===1?"serie marcada":"series marcadas"}`, ()=>restaurarDia(iso, snap));
+}
+const MAX_EXTRA_DIA=6;
+function agregarSerieDia(id){
+  const ns=numSeries(id);
+  const ses=getSesion(diaVista);
+  const arr=ses.sets[id] || (ses.sets[id]=Array(ns).fill(false));
+  while(arr.length<ns) arr.push(false);
+  if(arr.length>=ns+MAX_EXTRA_DIA){ toast("Ya llevas "+MAX_EXTRA_DIA+" series extra 💪"); return; }
+  arr.push(false);
+  guardar(); expandidos.add(id); renderHoy(); vibrar(12);
+  toast("Serie extra lista · márcala al terminarla");
+}
+function quitarSerieDia(id){
+  const ses=getSesion(diaVista);
+  const arr=ses.sets[id]; if(!arr) return;
+  const ns=numSeries(id);
+  while(arr.length>ns && !hecho(arr[arr.length-1])){ mediaSerie.delete(claveLado(id, arr.length-1)); arr.pop(); }
+  guardar(); renderHoy();
+}
+function colapsarEj(id){ expandidos.delete(id); renderHoy(); }
+
 function repsPrevias(id, i){ // reps reales de tu última sesión con este ejercicio (no infla los datos)
   const r=rango(EJERCICIOS[id]);
   if(r.tiempo) return r.low;
@@ -1248,15 +1431,33 @@ function marcarSet(id, i){
   const e=EJERCICIOS[id], r=rango(e), ns=numSeries(id);
   const arr=ses.sets[id] || (ses.sets[id]=Array(ns).fill(false));
   while(arr.length<ns) arr.push(false);
+
+  // Ejercicios por lado ("c/l" / "c/p"): un toque por cada lado; la serie se cierra con el segundo
+  if(porLado(e)){
+    const k=claveLado(id,i), L=LADOS(e);
+    if(!mediaSerie.has(k)){
+      mediaSerie.add(k);
+      vibrar(12);
+      toast("✓ "+L[0]+" · ahora "+ladoArt(e)+L[1]);
+      renderHoy();
+      return;
+    }
+    mediaSerie.delete(k);
+  }
+
   arr[i] = repsPrevias(id, i); // por defecto tus reps de la última sesión (ajusta con −/＋)
   guardar();
   const esHoyReal = diaVista===new Date().getDay() && semanaOffset===0;
-  const faltan=ns - arr.filter(hecho).length;
-  if(faltan>0){ vibrar(12); if(esHoyReal) iniciarTimer(e.p, e.n+" · pausa antes de la serie "+(arr.filter(hecho).length+1)); }
+  const nHechos=arr.filter(hecho).length;
+  const completo=nHechos>=ns;                       // ya cumpliste el objetivo del día
+  const faltan=Math.max(ns, arr.length) - nHechos;  // huecos por marcar (incluye series extra)
+  if(completo) registrarCargaSiHay(id);
+  if(faltan>0){ vibrar(12); if(esHoyReal) iniciarTimer(e.p, e.n+" · pausa antes de la serie "+(nHechos+1)); }
   else {
     vibrar([14,45,14]);
-    timerStop(); toast("✓ "+e.n+" completado"); registrarCargaSiHay(id);
-    expandidos.delete(id); // la tarjeta se colapsa sola al completarse
+    timerStop();
+    toast("✓ "+e.n+" completado · ¿hiciste una más?");
+    expandidos.add(id);   // la tarjeta queda abierta para ajustar reps o sumar una serie
   }
   renderHoy();
   if(faltan>0){   // anima el pill recién marcado (si sigue visible)
@@ -1275,6 +1476,7 @@ function resetSet(id, i){
   if(!arr) return;
   const prev=arr[i];
   arr[i]=false;              // reinicia la serie de un toque
+  mediaSerie.delete(claveLado(id,i));
   guardar();
   renderHoy();
   toastUndo("Serie reiniciada", ()=>{ arr[i]=prev; guardar(); renderHoy(); });
@@ -1284,7 +1486,7 @@ function ajustarRep(id, i, delta){
   const e=EJERCICIOS[id], r=rango(e);
   const arr=ses.sets[id] || (ses.sets[id]=Array(numSeries(id)).fill(false));
   let v = numVal(arr[i], r) + delta;
-  if(v<1){ arr[i]=false; guardar(); renderHoy(); return; } // baja de 1 rep → la serie vuelve a estar sin marcar
+  if(v<1){ arr[i]=false; mediaSerie.delete(claveLado(id,i)); guardar(); renderHoy(); return; } // baja de 1 rep → la serie vuelve a estar sin marcar
   arr[i]=v;
   guardar();
   // Actualización puntual del pill: evita reconstruir toda la lista y saltos de scroll
@@ -1449,14 +1651,30 @@ function iniciarAguante(id){
   while(arr.length<ns) arr.push(false);
   const i=arr.findIndex(x=>!hecho(x));
   if(i<0){ toast("Ya completaste "+e.n); return; }
-  const serie=i+1;
-  iniciarTimer(seg, "🧘 "+e.n+" · aguanta (serie "+serie+"/"+ns+")", ()=>{
-    arr[i]=r.low; guardar();
-    const faltan=ns-arr.filter(hecho).length;
+  const serie=i+1, slots=Math.max(ns, arr.length);
+  const pl=porLado(e), L=pl?LADOS(e):null, art=pl?ladoArt(e):"";
+  // cierra la serie (en los ejercicios por lado, sólo después de aguantar los dos lados)
+  const cerrar=()=>{
+    arr[i]=r.low;
+    mediaSerie.delete(claveLado(id,i));
+    guardar();
+    const nHechos=arr.filter(hecho).length;
+    const faltan=slots-nHechos;
+    if(nHechos>=ns) expandidos.add(id);   // queda abierta por si hiciste una serie de más
     renderHoy();
-    if(faltan>0) iniciarTimer(e.p, e.n+" · pausa antes de la serie "+(arr.filter(hecho).length+1));
-    else toast("✓ "+e.n+" completado");
-  }, "🛑 ¡Para! Serie "+serie+" cumplida");
+    if(faltan>0) iniciarTimer(e.p, e.n+" · pausa antes de la serie "+(nHechos+1));
+    else toast("✓ "+e.n+" completado · ¿hiciste una más?");
+  };
+  if(pl){
+    const cab=lado=>"🧘 "+e.n+" · "+lado+" (serie "+serie+"/"+ns+")";
+    iniciarTimer(seg, cab(L[0]),
+      ()=>iniciarTimer(CAMBIO_LADO_S, "🔄 Cambia de lado · "+e.n,
+            ()=>iniciarTimer(seg, cab(L[1]), cerrar, "🛑 ¡Para! Serie "+serie+" cumplida"),
+            "▶ ¡Ahora "+art+L[1]+"!"),
+      "🔄 ¡Cambia! Ahora "+art+L[1]);
+    return;
+  }
+  iniciarTimer(seg, "🧘 "+e.n+" · aguanta (serie "+serie+"/"+ns+")", cerrar, "🛑 ¡Para! Serie "+serie+" cumplida");
 }
 
 /* ================= PROGRESO ================= */
@@ -1549,23 +1767,51 @@ function cargaEnFecha(id, iso){
   if(kg==null && hist.length) kg=hist[0].kg;               // carga más antigua como aproximación
   return kg!=null ? kg : ((D.ultCarga && D.ultCarga[id])||null);
 }
-function tonelajeSemana(offset){ // 0 = semana actual, 1 = pasada
-  const h=new Date();
-  const ini=new Date(h); ini.setDate(h.getDate()-h.getDay()-7*offset); ini.setHours(0,0,0,0);
-  const fin=new Date(ini); fin.setDate(ini.getDate()+7);
-  let t=0;
+/* ===== Estadísticas por semana (base de los gráficos de seguimiento) ===== */
+function inicioSemana(offset){            // domingo de la semana; 0 = actual, 1 = pasada…
+  const h=new Date(hoyISO()+"T12:00:00");
+  const d=new Date(h); d.setDate(h.getDate()-h.getDay()-7*offset); d.setHours(0,0,0,0);
+  return d;
+}
+function semanasSerie(n){                 // n semanas, de la más antigua a la actual
+  const out=[];
+  for(let k=n-1;k>=0;k--){
+    const ini=inicioSemana(k), fin=new Date(ini); fin.setDate(ini.getDate()+7);
+    out.push({ini, fin, iso:isoDe(ini), finIso:isoDe(fin), lbl:fmtFecha(isoDe(ini))});
+  }
+  return out;
+}
+/* Todo lo hecho en una semana: tonelaje, series, reps, sesiones, cardio y RPE.
+   Los ejercicios "c/l" o "c/p" cuentan los dos lados (una rep por cada lado). */
+function statsSemana(ini, fin){
+  let ton=0, series=0, reps=0, sesiones=0, cardioMin=0, rpeSum=0, rpeN=0, dias=0;
   for(const iso in D.sesiones){
     const d=new Date(iso+"T12:00:00");
     if(d<ini || d>=fin) continue;
-    const sets=D.sesiones[iso].sets||{};
+    const ses=D.sesiones[iso], ds=d.getDay(), sets=ses.sets||{};
+    let algo=false;
     for(const id in sets){
-      if(!EJERCICIOS[id] || !EJERCICIOS[id].carga) continue;
-      const kg=cargaEnFecha(id, iso); if(!kg) continue;
-      const r=rango(EJERCICIOS[id]);
-      (sets[id]||[]).forEach(v=>{ if(hecho(v)) t+=kg*numVal(v,r); });
+      const e=EJERCICIOS[id]; if(!e) continue;
+      const r=rango(e), lados=porLado(e)?2:1;
+      const kg=e.carga ? cargaEnFecha(id, iso) : null;
+      (sets[id]||[]).forEach(v=>{
+        if(!hecho(v)) return;
+        algo=true; series++;
+        const n=numVal(v,r);
+        if(!r.tiempo){ reps+=n*lados; if(kg) ton+=kg*n*lados; }
+      });
     }
+    if(PLAN[ds] && sesionCompleta(ds, ses, iso)) sesiones++;
+    if(ses.cardio){ cardioMin+=(ses.cardioMin!=null&&ses.cardioMin>0)?ses.cardioMin:((PLAN[ds]&&PLAN[ds].cardio)||CARDIO_MIN_DEF); algo=true; }
+    if(ses.rpe){ rpeSum+=ses.rpe; rpeN++; }
+    if(algo) dias++;
   }
-  return Math.round(t);
+  return {ton:Math.round(ton), series, reps, sesiones, cardioMin, dias,
+          rpe: rpeN ? Math.round(rpeSum/rpeN*10)/10 : null};
+}
+function tonelajeSemana(offset){ // 0 = semana actual, 1 = pasada
+  const ini=inicioSemana(offset), fin=new Date(ini); fin.setDate(ini.getDate()+7);
+  return statsSemana(ini, fin).ton;
 }
 
 /* ===== Sparkline genérico (línea mint sobre canvas) ===== */
@@ -1573,10 +1819,13 @@ function dibujarSparkGen(canvasId, vals){
   const cv=document.getElementById(canvasId);
   if(!cv || vals.length<2) return;
   const dpr=window.devicePixelRatio||1;
-  const W=cv.clientWidth||300, H=cv.height/(cv.width/cv.clientWidth||1)||70;
-  const alto=parseInt(cv.getAttribute("height"),10)||70;
+  const W=cv.clientWidth||300;
+  // el alto original queda guardado: si no, cada redibujo lo iría duplicando
+  if(!cv.dataset.h) cv.dataset.h=parseInt(cv.getAttribute("height"),10)||70;
+  const alto=parseInt(cv.dataset.h,10);
+  cv.style.height=alto+"px";
   cv.width=W*dpr; cv.height=alto*dpr;
-  const c=cv.getContext("2d"); c.scale(dpr,dpr); c.clearRect(0,0,W,alto);
+  const c=cv.getContext("2d"); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,W,alto);
   const min=Math.min(...vals), max=Math.max(...vals);
   const X=i=> 6+(W-12)*(i/(vals.length-1));
   const Y=v=> max===min ? alto/2 : 8+(alto-16)*(1-(v-min)/(max-min));
@@ -1598,7 +1847,249 @@ function verHistProg(el, id){
   if(h.classList.contains("on")) dibujarSparkGen("sp_"+id, ((D.cargas&&D.cargas[id])||[]).map(x=>x.kg));
 }
 
+/* ================= GRÁFICOS DE SEGUIMIENTO =================
+   Motor mínimo de barras y líneas sobre canvas: sigue el tema activo,
+   se adapta al ancho del teléfono y no necesita ninguna librería.      */
+const G_FONT="10px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif";
+function gCtx(cid, alto){
+  const cv=document.getElementById(cid); if(!cv) return null;
+  const dpr=window.devicePixelRatio||1;
+  const W=Math.max(200, cv.clientWidth||280);
+  cv.style.height=alto+"px";
+  cv.width=Math.round(W*dpr); cv.height=Math.round(alto*dpr);
+  const c=cv.getContext("2d");
+  c.setTransform(dpr,0,0,dpr,0,0);
+  c.clearRect(0,0,W,alto);
+  c.font=G_FONT; c.textBaseline="middle";
+  return {c, W, H:alto};
+}
+/* Escala del eje vertical: 4 pasos "redondos" (0 · 3k · 6k · 9k · 12k) */
+function escalaEje(max, entero){
+  if(!(max>0)) return {paso:1, max:4};
+  const bruto=max/4;
+  const e=Math.pow(10, Math.floor(Math.log10(bruto))), m=bruto/e;
+  let paso=([1,1.5,2,2.5,3,4,5,7.5].find(x=>m<=x)||10)*e;
+  if(entero) paso=Math.max(1, Math.round(paso));
+  return {paso, max:paso*4};
+}
+function techoLindo(v, entero){ return escalaEje(v, entero).max; }
+function gNum(v){                          // 12.400 → 12,4k
+  if(Math.abs(v)>=10000) return Math.round(v/1000)+"k";
+  if(Math.abs(v)>=1000) return (Math.round(v/100)/10).toString().replace(".",",")+"k";
+  return String(Math.round(v*10)/10).replace(".",",");
+}
+function gEjes(c, W, H, pad, max, fmtY){
+  const linea=TC('--line'), txt=TC('--muted');
+  c.lineWidth=1; c.textAlign="right";
+  for(let k=0;k<=4;k++){
+    const v=max*k/4, y=pad.t+(H-pad.t-pad.b)*(1-k/4);
+    c.strokeStyle=linea; c.beginPath(); c.moveTo(pad.l, y+.5); c.lineTo(W-pad.r, y+.5); c.stroke();
+    c.fillStyle=txt; c.fillText((fmtY||gNum)(v), pad.l-5, y);
+  }
+  c.textAlign="center";
+}
+function gEtiquetasX(c, W, H, pad, labels, X){
+  // se dibujan desde la última hacia atrás para que nunca se pisen entre ellas
+  const ancho=W-pad.l-pad.r;
+  const paso=Math.max(1, Math.ceil(labels.length/Math.max(2, Math.floor(ancho/46))));
+  c.fillStyle=TC('--muted'); c.textAlign="center";
+  for(let i=labels.length-1; i>=0; i-=paso){
+    c.fillText(labels[i], Math.min(W-pad.r-4, Math.max(pad.l+14, X(i))), H-pad.b+9);
+  }
+}
+/* Barras por semana, con línea de meta y de tendencia opcionales */
+function graficoBarras(cid, alto, datos, opts){
+  opts=opts||{};
+  const g=gCtx(cid, alto); if(!g) return;
+  const {c,W,H}=g;
+  const pad={l:opts.padL||36, r:10, t:12, b:20};
+  const vals=datos.map(x=>+x.v||0);
+  const max=techoLindo(Math.max(opts.meta||0, ...vals, opts.minMax||1), opts.entero);
+  const base=H-pad.b, ancho=W-pad.l-pad.r, paso=ancho/Math.max(1,datos.length);
+  const bw=Math.max(4, Math.min(paso*0.62, 28));
+  const X=i=> pad.l+paso*(i+0.5);
+  const Y=v=> pad.t+(base-pad.t)*(1-Math.min(v,max)/max);
+  gEjes(c, W, H, pad, max, opts.fmtY);
+  // barras (la última semana, en curso, va en ámbar)
+  datos.forEach((d,i)=>{
+    const v=+d.v||0, y=Y(v), h=Math.max(v>0?2:0, base-y);
+    const ultima = i===datos.length-1;
+    c.fillStyle = v<=0 ? TC('--card2') : (ultima ? TC('--amber') : (opts.color||TC('--mint')));
+    const x=X(i)-bw/2, rr=Math.min(4, bw/2);
+    c.beginPath();
+    if(c.roundRect) c.roundRect(x, v>0?y:base-2, bw, v>0?h:2, [rr,rr,0,0]);
+    else c.rect(x, v>0?y:base-2, bw, v>0?h:2);
+    c.fill();
+  });
+  // meta
+  if(opts.meta){
+    c.strokeStyle=TC('--chart-trend'); c.setLineDash([5,4]); c.lineWidth=1.5;
+    c.beginPath(); c.moveTo(pad.l, Y(opts.meta)); c.lineTo(W-pad.r, Y(opts.meta)); c.stroke();
+    c.setLineDash([]);
+    const txt=opts.metaTxt||("meta "+opts.meta), tw=c.measureText(txt).width;
+    const tx=W-pad.r-tw-4, ty=Y(opts.meta)-9;
+    c.fillStyle=TC('--card'); c.fillRect(tx-3, ty-7, tw+6, 14);   // fondo para que se lea sobre las barras
+    c.fillStyle=TC('--chart-trend'); c.textAlign="left";
+    c.fillText(txt, tx, ty);
+  }
+  // tendencia (media móvil de 4 semanas; deja fuera la semana en curso, que aún no termina)
+  if(opts.tendencia && datos.length>=5){
+    const hasta=datos.length-1;
+    c.strokeStyle=TC('--chart-trend'); c.lineWidth=2; c.beginPath();
+    for(let i=0;i<hasta;i++){
+      const a=vals.slice(Math.max(0,i-3), i+1);
+      const v=a.reduce((s,x)=>s+x,0)/a.length;
+      i ? c.lineTo(X(i), Y(v)) : c.moveTo(X(i), Y(v));
+    }
+    c.stroke();
+  }
+  gEtiquetasX(c, W, H, pad, datos.map(x=>x.lbl), X);
+}
+/* Una o varias líneas (admite huecos: los valores null se saltan) */
+function graficoLineas(cid, alto, series, labels, opts){
+  opts=opts||{};
+  const g=gCtx(cid, alto); if(!g) return;
+  const {c,W,H}=g;
+  const pad={l:opts.padL||36, r:12, t:12, b:20};
+  const todos=[].concat(...series.map(s=>s.vals)).filter(v=>v!=null);
+  if(!todos.length) return;
+  const maxV=Math.max(...todos), minV=Math.min(...todos);
+  let min=opts.min, max=opts.max;
+  if(min==null || max==null){                       // escala automática con etiquetas redondas
+    const usarCero = minV<=0 || (maxV-minV)/maxV>0.5;
+    const base = usarCero ? 0 : minV-(maxV-minV)*0.2;
+    const esc = escalaEje((maxV-base)||1, opts.entero);
+    const piso = usarCero ? 0 : Math.max(0, Math.floor(base/esc.paso)*esc.paso);
+    if(min==null) min=piso;
+    if(max==null) max=piso+esc.max;
+  }
+  const base=H-pad.b, ancho=W-pad.l-pad.r;
+  const X=i=> pad.l+(labels.length>1 ? ancho*(i/(labels.length-1)) : ancho/2);
+  const Y=v=> pad.t+(base-pad.t)*(1-(v-min)/((max-min)||1));
+  // ejes con el mínimo desplazado
+  c.lineWidth=1; c.textAlign="right";
+  for(let k=0;k<=4;k++){
+    const v=min+(max-min)*k/4, y=pad.t+(base-pad.t)*(1-k/4);
+    c.strokeStyle=TC('--line'); c.beginPath(); c.moveTo(pad.l, y+.5); c.lineTo(W-pad.r, y+.5); c.stroke();
+    c.fillStyle=TC('--muted'); c.fillText((opts.fmtY||gNum)(v), pad.l-5, y);
+  }
+  series.forEach(s=>{
+    const col=s.color||TC('--mint');
+    c.strokeStyle=col; c.lineWidth=2.2; c.beginPath();
+    let dibujando=false, ultimo=-1;
+    s.vals.forEach((v,i)=>{
+      if(v==null) return;
+      if(!dibujando){ c.moveTo(X(i), Y(v)); dibujando=true; } else c.lineTo(X(i), Y(v));
+      ultimo=i;
+    });
+    c.stroke();
+    if(ultimo>=0){ c.fillStyle=col; c.beginPath(); c.arc(X(ultimo), Y(s.vals[ultimo]), 3.5, 0, Math.PI*2); c.fill(); }
+  });
+  gEtiquetasX(c, W, H, pad, labels, X);
+}
+
+/* ----- Datos y tarjetas de cada gráfico ----- */
+let grafSemanas=12;
+function setGrafSemanas(n){ grafSemanas=n; renderGraficos(); }
+/* Compara la semana en curso con la anterior. Ojo: la semana actual todavía no
+   termina, así que se avisa en vez de mostrar una caída que no es real. */
+function gDelta(a, b, uni){
+  if(a==null) return "";
+  if(!a) return "<b>Semana en curso:</b> aún no registras nada.";
+  if(b==null || b===0) return "<b>Semana en curso.</b>";
+  const d=Math.round((a-b)*10)/10;
+  if(d===0) return "Semana en curso: vas igual que la anterior.";
+  const p=Math.round(Math.abs(d)/b*100);
+  return "Semana en curso: "+(d>0?"▲ +":"▼ −")+gNum(Math.abs(d))+(uni||"")+" ("+p+"%) respecto de la semana pasada.";
+}
+function gCard(cid, titulo, sub, alto, lectura, leyenda, vacio){
+  return `<div class="g-card">
+    <div class="g-head"><span>${titulo}</span><b>${sub||""}</b></div>
+    ${vacio ? `<div class="g-vacio">${vacio}</div>` : `<canvas id="${cid}"></canvas>`}
+    ${(!vacio&&leyenda)?`<div class="g-leg">${leyenda}</div>`:""}
+    ${lectura?`<div class="g-lectura">${lectura}</div>`:""}
+  </div>`;
+}
+/* Mejor 1RM estimado de cada semana, por ejercicio */
+function e1rmSemanal(id, sem){
+  const h=e1rmHist(id);
+  return sem.map(s=>{
+    const en=h.filter(x=>x.d>=s.iso && x.d<s.finIso).map(x=>x.e);
+    return en.length ? Math.max(...en) : null;
+  });
+}
+function ejesConE1rm(){       // ejercicios con carga y suficiente historial real
+  return Object.keys(EJERCICIOS)
+    .filter(id=>EJERCICIOS[id].carga && ejActivo(id, hoyISO()))
+    .map(id=>({id, n:e1rmHist(id).length}))
+    .filter(x=>x.n>=2)
+    .sort((a,b)=>b.n-a.n)
+    .slice(0,4)
+    .map(x=>x.id);
+}
+function renderGraficos(){
+  const sec=document.getElementById("graficosSec"); if(!sec) return;
+  if(!pref('graficos')){ sec.style.display="none"; return; }
+  sec.style.display="block";
+  const n=grafSemanas;
+  const chips=document.getElementById("grafChips");
+  if(chips) chips.innerHTML=[8,12,26,52].map(k=>
+    `<button class="int-chip ${k===n?'sel':''}" onclick="setGrafSemanas(${k})">${k} semanas</button>`).join("");
+
+  const sem=semanasSerie(n).map(s=>Object.assign(s, statsSemana(s.ini, s.fin)));
+  const labels=sem.map(s=>s.lbl);
+  const act=sem[sem.length-1], prev=sem[sem.length-2]||{};
+  const box=document.getElementById("graficosBox"); if(!box) return;
+
+  const hayAlgo = sem.some(s=>s.series>0 || s.cardioMin>0);
+  if(!hayAlgo){
+    box.innerHTML=`<div class="nota"><b>Aún no hay datos para graficar.</b> Marca tus series y tu cardio en la vista Hoy y aquí verás cómo avanzas semana a semana.</div>`;
+    return;
+  }
+
+  const ejes1rm=pref('e1rm')?ejesConE1rm():[];
+  const cols=[TC('--mint'), TC('--amber'), TC('--chart-trend'), TC('--danger')];
+  const leyenda1rm=ejes1rm.map((id,k)=>`<span><i style="background:${cols[k%4]}"></i>${EJERCICIOS[id].n}</span>`).join("");
+  const hayRpe=sem.some(s=>s.rpe!=null);
+
+  const barras=(clave)=>sem.map(s=>({lbl:s.lbl, v:s[clave]||0}));
+  const sinDatos=(clave)=>sem.every(s=>!s[clave]);
+  const leyBarras=`<span><i style="background:${TC('--mint')}"></i>semanas cerradas</span>`+
+    `<span><i style="background:${TC('--amber')}"></i>semana en curso</span>`+
+    `<span><i style="background:${TC('--chart-trend')}"></i>tendencia 4 semanas</span>`;
+  const vacioTon=sinDatos("ton") ? "Aún no hay tonelaje que mostrar: anota la carga (kg) de cada ejercicio en la vista Hoy y este gráfico se llena solo." : "";
+
+  let html="";
+  html+=gCard("gTon","Tonelaje semanal", (act.ton?gNum(act.ton)+" kg":"—"), 180,
+    `Kilos totales movidos por semana (carga × reps, contando los dos lados en los ejercicios <b>c/l</b> y <b>c/p</b>). Es la señal más directa de que estás progresando. ${gDelta(act.ton, prev.ton, " kg")}`,
+    leyBarras, vacioTon);
+  html+=gCard("gSeries","Volumen · series completadas", (act.series||0)+" series", 170,
+    `Cuántas series efectivas hiciste cada semana, incluidas las <b>series extra</b>. Subir el volumen de a poco (5–10% por semana) es lo que hace crecer el músculo. ${gDelta(act.series, prev.series, " series")}`,
+    "", sinDatos("series") ? "Todavía no registras series en este periodo." : "");
+  html+=gCard("gSes","Adherencia · sesiones completas", (act.sesiones||0)+"/6", 160,
+    `Días con la sesión terminada (fuerza + cardio). La constancia manda: 5–6 por semana es la meta. ${gDelta(act.sesiones, prev.sesiones, " sesiones")}`);
+  if(ejes1rm.length) html+=gCard("g1rm","Fuerza estimada · 1RM por semana", "", 180,
+    `Tu mejor 1RM estimado (fórmula de Epley) en cada semana. Si la línea sube, estás más fuerte aunque la pesa no se mueva.`, leyenda1rm);
+  html+=gCard("gCardio","Cardio · minutos por semana", (act.cardioMin||0)+" min", 160,
+    `Minutos de bici o trote registrados. Con 150 min a la semana ya cubres la recomendación de salud cardiovascular. ${gDelta(act.cardioMin, prev.cardioMin, " min")}`,
+    "", sinDatos("cardioMin") ? "Marca tu cardio en la vista Hoy para ver esta curva." : "");
+  if(hayRpe) html+=gCard("gRpe","Esfuerzo percibido · RPE promedio", (act.rpe!=null?act.rpe+" / 10":"—"), 150,
+    `Promedio semanal de cuán duras se sintieron las sesiones. Varias semanas sobre 8 seguidas = toca una semana de descarga.`);
+  box.innerHTML=html;
+
+  if(!vacioTon) graficoBarras("gTon", 180, barras("ton"), {tendencia:true, padL:40});
+  graficoBarras("gSeries", 170, barras("series"), {padL:30, entero:true});
+  graficoBarras("gSes", 160, barras("sesiones"), {meta:6, metaTxt:"meta 6", padL:24, minMax:6, entero:true});
+  if(ejes1rm.length) graficoLineas("g1rm", 180,
+    ejes1rm.map((id,k)=>({n:EJERCICIOS[id].n, color:cols[k%4], vals:e1rmSemanal(id, sem)})),
+    labels, {padL:34, fmtY:v=>Math.round(v)});
+  graficoBarras("gCardio", 160, barras("cardioMin"), {padL:30, meta:150, metaTxt:"150 min", entero:true});
+  if(hayRpe) graficoLineas("gRpe", 150, [{n:"RPE", color:TC('--amber'), vals:sem.map(s=>s.rpe)}],
+    labels, {min:0, max:10, padL:22, fmtY:v=>Math.round(v)});
+}
+
 function renderProg(){
+  renderGraficos();
   renderHeatmap();
   renderE1rm();
   renderCiclos();
@@ -2196,6 +2687,7 @@ const PREFS_LISTA=[
   ["medidas","Medidas corporales","Pecho, cadera, brazo y muslo en la vista Peso"],
   ["notas","Notas por sesión","Campo de texto libre al final de cada día en Hoy"],
   ["warmup","Calentamiento","Tarjeta de calentamiento en los días de fuerza"],
+  ["graficos","Gráficos de seguimiento","Tonelaje, volumen, adherencia, cardio y fuerza semana a semana en Progresión"],
   ["heatmap","Mapa de actividad","Calendario tipo GitHub en Progresión"],
   ["e1rm","1RM estimado","Fuerza estimada por ejercicio (fórmula de Epley)"],
   ["rpe","RPE de la sesión","Deslizador de esfuerzo percibido al final de la sesión"],
@@ -2266,6 +2758,14 @@ function exportarCardioCSV(){
   if(!filas){ toast("Aún no registras cardio en la app"); return; }
   descargar("cardio-"+hoyISO()+".csv", "﻿"+csv, "text/csv;charset=utf-8");
 }
+function exportarSemanalCSV(){
+  let csv="semana_desde;sesiones_completas;dias_entrenados;series;reps;tonelaje_kg;cardio_min;rpe_promedio\n";
+  const sem=semanasSerie(52).map(s=>Object.assign(s, statsSemana(s.ini, s.fin)));
+  sem.forEach(s=>{
+    csv+=[s.iso, s.sesiones, s.dias, s.series, s.reps, numCL(s.ton), s.cardioMin, s.rpe!=null?numCL(s.rpe):""].join(";")+"\n";
+  });
+  descargar("resumen-semanal-"+hoyISO()+".csv", csv, "text/csv;charset=utf-8");
+}
 function exportarMedidasCSV(){
   let csv="zona;fecha;cm\n"; let filas=0;
   (D.medidas||[]).forEach(x=>{ csv+=`Cintura;${x.d};${numCL(x.cm)}\n`; filas++; });
@@ -2326,6 +2826,15 @@ function verVista(v){
   if(v==="Datos") renderDatos();
   window.scrollTo(0,0);
 }
+/* Los gráficos se redibujan al girar el teléfono o cambiar el ancho */
+let _redibujar=null;
+window.addEventListener("resize", ()=>{
+  clearTimeout(_redibujar);
+  _redibujar=setTimeout(()=>{
+    if(vistaActual==="Prog") renderProg();
+    else if(vistaActual==="Peso") renderPeso();
+  }, 220);
+});
 
 /* ================= SINCRONIZACIÓN CON SUPABASE ================= *
    Diseño simple:
