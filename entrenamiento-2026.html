@@ -322,6 +322,24 @@
   .tema-n{display:block; font-weight:800; font-size:14px;}
   .tema-d{display:block; font-size:11.5px; margin-top:2px; line-height:1.3;}
 
+  /* Selector de rutina */
+  .rut-card{display:block; width:100%; text-align:left; border:2px solid var(--line); border-radius:14px;
+    padding:14px; background:var(--card2); color:var(--text); cursor:pointer; margin-bottom:10px;}
+  .rut-card.sel{border-color:var(--mint); box-shadow:0 0 0 2px var(--mint);}
+  .rut-head{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
+  .rut-n{font-weight:800; font-size:16px;}
+  .rut-badge{font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase;
+    color:var(--on-accent); background:var(--mint); border-radius:999px; padding:3px 8px;}
+  .rut-et{font-size:12px; color:var(--muted); margin-top:2px;}
+  .rut-d{font-size:13px; color:var(--muted); margin-top:7px; line-height:1.45;}
+  .rut-dias{margin-top:11px; display:flex; flex-direction:column; gap:1px;
+    background:var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  .rut-dia{display:flex; align-items:center; gap:9px; background:var(--card); padding:8px 10px; font-size:13px;}
+  .rut-dia .dd{flex:0 0 34px; color:var(--muted); font-weight:800; font-size:11px; letter-spacing:.5px;}
+  .rut-dia .dt{flex:1 1 auto; line-height:1.3;}
+  .rut-dia .ds{flex:0 0 auto; color:var(--muted); font-size:11.5px; font-variant-numeric:tabular-nums; text-align:right;}
+  .rut-dia.off .dt{color:var(--muted);}
+
   /* Secciones plegables (vista Datos) */
   .sec{border-bottom:1px solid var(--line);}
   .sec>summary{list-style:none; cursor:pointer; display:flex; align-items:center; gap:8px;
@@ -383,7 +401,8 @@
     <div class="fecha" id="fechaHoy"></div>
     <h1 id="tituloDia"></h1>
     <div class="sub" id="focoDia"></div>
-    <div class="racha" id="rachaHoy"></div>
+    <div class="racha" id="rutinaHoy"></div>
+    <div class="racha" id="rachaHoy" style="margin-left:6px"></div>
     <div class="racha" id="progFechaHoy" style="margin-left:6px"></div>
   </div>
   <div class="sem-aviso" id="semAviso" style="display:none"><span id="semAvisoTxt"></span><button onclick="volverHoy()">Volver a hoy</button></div>
@@ -501,6 +520,10 @@
     <div class="lista" id="temasBox"></div>
   </details>
   <details class="sec" open>
+    <summary>🏛️ Rutina · cambia cuando quieras</summary>
+    <div class="lista" id="rutinasBox"></div>
+  </details>
+  <details class="sec" open>
     <summary>⚙️ Preferencias · activar o desactivar</summary>
     <div class="lista" id="prefsBox"></div>
   </details>
@@ -589,6 +612,18 @@ const EJERCICIOS = {
   superman:{n:"Superman (lumbares)", imp:"Peso corporal", s:3, r:"12–15", p:45, tip:"Sube brazos y piernas a la vez, mantén 1 s arriba",
     v:"https://www.youtube.com/results?search_query=ejercicio+superman+lumbares", carga:false,
     desde:"2026-12-28"},
+  // ===== Exclusivos de la rutina Dios Griego (tirón vertical y deltoides posterior) =====
+  domin:{n:"Dominadas (o negativas)", imp:"Barra de dominadas", s:5, r:"5–10", p:150,
+    tip:"Si aún no sale una completa, haz negativas: sube con impulso y baja en 5 s",
+    v:"https://www.youtube.com/results?search_query=dominadas+progresion+principiante", carga:true,
+    ini:"Empieza sin lastre; suma peso en la mochila cuando pases de 10 reps limpias"},
+  facep:{n:"Face pull con banda", imp:"Banda elástica", s:3, r:"15–20", p:60,
+    tip:"Tira hacia la cara y separa las manos al final del recorrido",
+    v:"https://www.youtube.com/results?search_query=face+pull+banda+elastica", carga:false},
+  pajaros:{n:"Pájaros (deltoides posterior)", imp:"Mancuernas", s:3, r:"12–15", p:60,
+    tip:"Torso inclinado, codos apenas flectados, sube con los codos no con las manos",
+    v:"https://www.youtube.com/results?search_query=pajaros+deltoides+posterior+mancuernas", carga:true,
+    ini:"Parte liviano: 3–5 kg por mano. Aquí manda la técnica, no el peso"},
 };
 /* Lotes de ejercicios nuevos por progresión (para el calendario) */
 const NUEVOS_POR_PROG=[
@@ -624,9 +659,12 @@ const TECNICA = {
   martillo:["Palmas enfrentadas (agarre neutro) todo el recorrido","Codos pegados al cuerpo, sin balanceo","Baja en 2–3 s"],
   fondos:["Manos al borde de la silla, dedos hacia adelante","Codos hacia atrás, no abiertos a los lados","Baja hasta ~90° de codo; hombros lejos de las orejas","<b>Error común:</b> hundir los hombros al bajar"],
   superman:["Boca abajo, sube brazos y piernas a la vez","Mirada al suelo: cuello neutro, sin hiperextender","Mantén 1 s arriba y baja con control"],
+  domin:["Agarre un poco más ancho que los hombros, palmas al frente","Antes de tirar, baja los hombros: aleja las orejas de las manos","Lleva el pecho a la barra, no la barbilla; baja en 2–3 s","Si aún no sale ninguna: <b>negativas</b>, súbete con una silla y baja lo más lento que puedas","<b>Error común:</b> dar patadas para subir (kipping) sin controlarlo"],
+  facep:["Banda anclada a la altura del pecho","Tira hacia la frente con los codos altos, por sobre las muñecas","Al final separa las manos y aprieta los omóplatos 1 s","<b>Error común:</b> tirar con los bíceps en vez de con la parte de atrás del hombro"],
+  pajaros:["Bisagra de cadera: torso casi paralelo al suelo, espalda neutra","Codos apenas flectados y fijos; sube abriendo los brazos en cruz","Piensa en llevar los codos al techo, no las manos","<b>Error común:</b> subir tanto peso que terminas haciendo un remo"],
 };
 
-const PLAN = {
+const PLAN_BASE = {
   1:{titulo:"Lunes · Empuje", foco:"Pecho, hombro, tríceps y core", ej:["fpecho","fpies","press","phom","ftri","fondos","exttri","plancha"], cardio:45, cardioIntDef:"Ritmo liviano",
      cardioNota:"Ritmo conversable"},
   2:{titulo:"Martes · Cardio suave", foco:"Bicicleta + estiramientos", ej:[], cardio:45, cardioIntDef:"Ritmo liviano",
@@ -641,6 +679,90 @@ const PLAN = {
      cardioNota:"Recuperación activa: bici liviana por defecto (o trote suave si prefieres), ritmo bien conversable. Si el cuerpo pide descanso total, sáltalo sin culpa."},
   0:{titulo:"Domingo · Descanso", foco:"Recuperación", ej:[], cardio:0},
 };
+
+/* ================ RUTINA "DIOS GRIEGO" ================
+   Prioriza la V: deltoides lateral 3 días por semana, tirón vertical (dominadas) y
+   deltoides posterior, que en el plan base están en 4, 0 y 0 series respectivamente.
+   Torso A / Pierna / Torso B: hombro y espalda pasan a 2 veces por semana.
+   El cardio sale de los días de pesas y baja de 255 a 135 min semanales. */
+const PLAN_GRIEGO = {
+  1:{titulo:"Lunes · Torso A", foco:"Hombro lateral, pecho y tríceps", ej:["latr","press","fpecho","fpies","phom","exttri","fondos","facep"], cardio:0},
+  2:{titulo:"Martes · Cardio suave", foco:"Bicicleta + estiramientos", ej:[], cardio:45, cardioIntDef:"Ritmo liviano",
+     cardioNota:"Suave. Al terminar: 10 min de estiramientos (cuádriceps, femorales, espalda baja, dorsales) · 20–30 s por zona, sin rebotes."},
+  3:{titulo:"Miércoles · Pierna y core", foco:"Pierna completa, glúteo y core", ej:["latr","sent","bulg","pmr","puente","gem","plat","elevp"], cardio:0},
+  4:{titulo:"Jueves · Cardio + movilidad", foco:"Bicicleta + movilidad", ej:[], cardio:45, cardioIntDef:"Normal",
+     cardioNota:"Suave–media, respiración nasal. Luego 10–15 min de movilidad: hombros → cadera → columna (gato–vaca, rotaciones suaves)."},
+  5:{titulo:"Viernes · Torso B", foco:"Dorsal, hombro posterior y bíceps", ej:["latr","domin","remoZ","remo1","pull","curl","martillo","pajaros"], cardio:0},
+  6:{titulo:"Sábado · Cardio liviano", foco:"Bici suave para recuperar", ej:[], cardio:45, cardioIntDef:"Ritmo liviano",
+     cardioNota:"Recuperación activa: ritmo bien conversable. Si el cuerpo pide descanso total, sáltalo sin culpa."},
+  0:{titulo:"Domingo · Descanso", foco:"Recuperación", ej:[], cardio:0},
+};
+
+/* Rutinas disponibles. `mods` ajusta un ejercicio SOLO dentro de esa rutina:
+   la definición original en EJERCICIOS nunca se toca, así que cambiar de rutina
+   no altera la otra ni pierde ningún registro. */
+const RUTINAS = {
+  base:{
+    n:"Plan 2026",
+    d:"Tu plan original, tal como venía: empuje / tirón / pierna, 3 días de fuerza y bici casi todos los días.",
+    et:"3 días de fuerza · 65 series · 255 min de bici",
+    plan:PLAN_BASE,
+  },
+  griego:{
+    n:"Dios Griego",
+    d:"Reparte el torso en dos días y prioriza lo que forma la V: hombro lateral las 3 sesiones, dominadas y deltoides posterior. El cardio sale de los días de pesas.",
+    et:"3 días de fuerza · 85 series · 135 min de bici",
+    plan:PLAN_GRIEGO,
+    mods:{
+      // Entran de inmediato en vez de esperar su fecha de progresión
+      phom:{desde:null}, gem:{desde:null}, bulg:{desde:null}, martillo:{desde:null},
+      fondos:{desde:null, carga:true, imp:"Silla firme + mochila", ini:"Sin lastre al principio; suma peso en la mochila al pasar de 12 reps"},
+      // Peso corporal que ahora sí progresa con carga (mochila lastrada)
+      fpecho:{carga:true, imp:"Tabla push-up + mochila", ini:"Sin lastre hasta llegar a 14 reps limpias; después, mochila"},
+      fpies:{carga:true, imp:"Tabla + apoyo pies + mochila", ini:"Sin lastre hasta llegar a 12 reps limpias; después, mochila"},
+      // Pausas largas en los compuestos pesados
+      sent:{p:150}, pmr:{p:150}, remoZ:{p:150},
+    },
+  },
+};
+
+function rutinaKey(){ const k=D && D.prefs && D.prefs.rutina; return RUTINAS[k] ? k : "base"; }
+function rutinaAct(){ return RUTINAS[rutinaKey()]; }
+
+let PLAN = PLAN_BASE;          // apunta siempre a la rutina activa (lo fija aplicarRutina)
+let EN_PLAN = new Set();       // ids de ejercicios que existen en la rutina activa
+const EJ_CACHE = {};
+/* Ejercicio resuelto: la definición base más los ajustes de la rutina activa. */
+function EJ(id){
+  const base=EJERCICIOS[id];
+  if(!base) return base;
+  const mods=rutinaAct().mods;
+  const m=mods && mods[id];
+  if(!m) return base;
+  const k=rutinaKey()+"|"+id;
+  if(!EJ_CACHE[k]) EJ_CACHE[k]=Object.assign({}, base, m);
+  return EJ_CACHE[k];
+}
+function aplicarRutina(){
+  PLAN=rutinaAct().plan;
+  EN_PLAN=new Set();
+  for(const d in PLAN) PLAN[d].ej.forEach(id=>EN_PLAN.add(id));
+}
+/* El plan con el que se registró una sesión: cambiar de rutina no reescribe el pasado. */
+function planDe(diaSem, ses){
+  const k=ses && ses.rutina;
+  const r=(k && RUTINAS[k]) ? RUTINAS[k] : rutinaAct();
+  return r.plan[diaSem];
+}
+/* ¿Ese ejercicio tocaba ese día en alguna de las rutinas? Mantiene el historial de
+   progresión aunque el ejercicio haya cambiado de día al cambiar de rutina. */
+function ejEnAlgunPlan(id, diaSem){
+  for(const k in RUTINAS){
+    const p=RUTINAS[k].plan[diaSem];
+    if(p && p.ej.includes(id)) return true;
+  }
+  return false;
+}
 
 /* ================= DATOS ================= */
 const ALTURA = 1.65; // según IMC de tu planilla
@@ -691,6 +813,9 @@ async function cargar(){
   D = datos && datos.pesos ? datos : D_DEFAULT();
   ["sesiones","cargas","ultCarga","seriesExtra","incremento","aplicado","pospuesto","descarga","medidasExtra","prefs","prefsMeta"].forEach(k=>{ if(!D[k]) D[k]={}; });
   if(!D.medidas) D.medidas=[];
+  aplicarRutina();
+  // Todo lo registrado antes de que existieran las rutinas se hizo con el Plan 2026
+  for(const iso in D.sesiones){ if(!D.sesiones[iso].rutina) D.sesiones[iso].rutina="base"; }
   D.progresiones = Array.from(new Set([...(D.progresiones||[]), ...PROGRESIONES_INICIALES])).sort();
   expirarDescargas();
   SUPA = await leerSupa();
@@ -725,9 +850,12 @@ function sembrarHistorial(){
   if(!D.sesiones) D.sesiones={};
   const marcar=(iso, diaSem)=>{
     if(D.sesiones[iso]) return; // nunca pisa lo que registres en la app
-    const plan=PLAN[diaSem]; const sets={};
-    plan.ej.filter(id=>ejActivo(id, iso)).forEach(id=>{ sets[id]=Array(EJERCICIOS[id].s).fill(true); });
-    D.sesiones[iso]={sets:sets, cardio:true, _seed:true};
+    // El historial real se hizo con el Plan 2026: se siembra siempre con ese plan,
+    // sin importar qué rutina esté activa ahora.
+    const plan=PLAN_BASE[diaSem]; const sets={};
+    plan.ej.filter(id=>ejActivoEn(id, iso, {rutina:"base"}))
+           .forEach(id=>{ sets[id]=Array(EJERCICIOS[id].s).fill(true); });
+    D.sesiones[iso]={sets:sets, cardio:true, _seed:true, rutina:"base"};
   };
   const serie=(inicioISO, finISO, diaSem, saltar)=>{
     let f=new Date(inicioISO+"T12:00:00");
@@ -812,8 +940,9 @@ function renderDias(){
 function cambiarSemana(d){ semanaOffset=Math.min(0, Math.max(-104, semanaOffset+d)); expandidos.clear(); renderHoy(); }
 function volverHoy(){ semanaOffset=0; diaVista=new Date().getDay(); expandidos.clear(); renderHoy(); }
 function sesionCompleta(diaSem, ses, iso){
-  const plan=PLAN[diaSem];
-  const ejs=plan.ej.filter(id=>ejActivo(id, iso||hoyISO()));
+  const plan=planDe(diaSem, ses);
+  if(!plan) return false;
+  const ejs=plan.ej.filter(id=>ejActivoEn(id, iso||hoyISO(), ses));
   if(ejs.length===0 && plan.cardio===0) return false;
   const ejOk = ejs.every(id=>{
     const arr=ses.sets && ses.sets[id];
@@ -824,7 +953,7 @@ function sesionCompleta(diaSem, ses, iso){
 }
 function getSesion(diaSem){
   const iso=isoDeDia(diaSem);
-  if(!D.sesiones[iso]) D.sesiones[iso]={sets:{}, cardio:false};
+  if(!D.sesiones[iso]) D.sesiones[iso]={sets:{}, cardio:false, rutina:rutinaKey()};
   return D.sesiones[iso];
 }
 
@@ -883,16 +1012,16 @@ function rango(e){
 }
 function hecho(v){ return v===true || (typeof v==="number" && v>0); }
 function numVal(v, r){ return typeof v==="number" ? v : (v===true ? r.low : 0); }
-function numSeries(id){ return EJERCICIOS[id].s + ((D.seriesExtra&&D.seriesExtra[id])||0); }
+function numSeries(id){ return EJ(id).s + ((D.seriesExtra&&D.seriesExtra[id])||0); }
 function claseSet(v, r){ if(!hecho(v)) return ""; const n=numVal(v,r); if(n>r.high) return "sup"; if(n>=r.low) return "ok"; return "bajo"; }
-function esKg(id){ return !!EJERCICIOS[id].carga; }
+function esKg(id){ return !!EJ(id).carga; }
 function incremento(id){ return (D.incremento&&D.incremento[id]!=null)?D.incremento[id]:(DEFAULT_INC[id]||1); }
 // última fecha en que TODAS las series llegaron al tope del rango
 function fechaListo(id){
-  const e=EJERCICIOS[id], r=rango(e); let best=null;
+  const e=EJ(id), r=rango(e); let best=null;
   for(const iso in D.sesiones){
     const day=new Date(iso+"T12:00:00").getDay();
-    if(!(PLAN[day] && PLAN[day].ej.includes(id))) continue;
+    if(!ejEnAlgunPlan(id, day)) continue;   // vale para cualquiera de las rutinas: el historial no se corta al cambiar
     const arr=D.sesiones[iso].sets && D.sesiones[iso].sets[id];
     if(!arr || !arr.length) continue;
     if(arr.every(v=> numVal(v,r) >= r.high)){ if(!best || iso>best) best=iso; }
@@ -907,20 +1036,34 @@ const isoDe = f => f.getFullYear()+"-"+String(f.getMonth()+1).padStart(2,"0")+"-
 function sumarDias(iso, n){ const f=new Date(iso+"T12:00:00"); f.setDate(f.getDate()+n); return isoDe(f); }
 function ultimaProgISO(){ const p=D.progresiones||[]; return p.length ? p[p.length-1] : "2026-01-19"; }
 function proxProgISO(){ return sumarDias(ultimaProgISO(), PROG_DIAS); }
-function ejActivo(id, iso){ const e=EJERCICIOS[id]; return !e.desde || iso>=e.desde; }
+function ejActivo(id, iso){
+  if(!EN_PLAN.has(id)) return false;         // no pertenece a la rutina activa
+  return ejActivoEn(id, iso, null);
+}
+/* Igual que ejActivo pero resuelto con la rutina de esa sesión, no con la activa:
+   así una sesión vieja se sigue evaluando con las reglas que tenía cuando la hiciste. */
+function ejActivoEn(id, iso, ses){
+  const base=EJERCICIOS[id];
+  if(!base) return false;
+  const k=ses && ses.rutina;
+  const r=(k && RUTINAS[k]) ? RUTINAS[k] : rutinaAct();
+  const m=r.mods && r.mods[id];
+  const desde=(m && ("desde" in m)) ? m.desde : base.desde;
+  return !desde || iso>=desde;
+}
 /* Sugerencias por RENDIMIENTO, no por calendario (doble progresión):
    1) En cualquier momento: tope del rango en TODAS las series en 2 sesiones reales
       seguidas → sube la carga (~2,5–5%) o, si es de peso corporal/tiempo, suma 1 serie.
    2) En la fecha de revisión (cada 8 semanas): para lo que no progresó,
       recuerda el objetivo de sumar reps hasta el tope (y se revisa el plan). */
 function topeConsecutivo(id){ // fecha de la 2ª sesión real consecutiva con todas las series al tope
-  const e=EJERCICIOS[id], r=rango(e);
+  const e=EJ(id), r=rango(e);
   const out=[];
   Object.keys(D.sesiones).sort().forEach(iso=>{
     const s=D.sesiones[iso];
     if(!s || s._seed) return;
     const day=new Date(iso+"T12:00:00").getDay();
-    if(!(PLAN[day] && PLAN[day].ej.includes(id))) return;
+    if(!ejEnAlgunPlan(id, day)) return;
     const arr=s.sets && s.sets[id];
     if(!arr || !arr.some(hecho)) return;
     const tope = arr.filter(hecho).length>=numSeries(id) && arr.every(v=>!hecho(v) || numVal(v,r)>=r.high);
@@ -942,7 +1085,7 @@ function sugerencia(id){
       return {ready:perf, origen:"perf", tipo:"kg", nuevo,
         texto:`tope del rango en 2 sesiones seguidas: sube la carga a <b>${nuevo} kg</b> (+${incremento(id)} ≈ 2,5–5%) y vuelve al piso del rango de reps`};
     }
-    const r=rango(EJERCICIOS[id]);
+    const r=rango(EJ(id));
     return {ready:perf, origen:"perf", tipo:"serie",
       texto:`tope${r.tiempo?" de tiempo":""} en 2 sesiones seguidas: agrega <b>1 serie</b> (más volumen)`};
   }
@@ -1083,6 +1226,15 @@ function renderHoy(){
   const rachaEl=document.getElementById("rachaHoy");
   rachaEl.innerHTML = `🔥 <b>${dias}</b> ${dias===1?"sesión completada":"sesiones completadas"} en total`;
 
+  // Rutina activa (toque = ir a cambiarla)
+  const rutEl=document.getElementById("rutinaHoy");
+  if(rutEl){
+    rutEl.innerHTML = `🏛️ Rutina: <b>${esc(rutinaAct().n)}</b>`;
+    rutEl.style.cursor="pointer";
+    rutEl.title="Cambiar de rutina";
+    rutEl.onclick=()=>{ verVista("Datos"); setTimeout(()=>{ const b=document.getElementById("rutinasBox"); if(b) b.scrollIntoView({behavior:"smooth", block:"center"}); }, 60); };
+  }
+
   // Próxima progresión
   const prox=proxProgISO();
   const pf=document.getElementById("progFechaHoy");
@@ -1118,7 +1270,7 @@ function renderHoy(){
   // Implementos que necesitas hoy
   const impsCont=document.getElementById("impsDia");
   const vistos={};
-  ejDia.forEach(id=>{ iconosDe(EJERCICIOS[id].imp).forEach(x=>{ vistos[x[1]]=x[0]; }); });
+  ejDia.forEach(id=>{ iconosDe(EJ(id).imp).forEach(x=>{ vistos[x[1]]=x[0]; }); });
   if(plan.cardio>0) vistos["Bicicleta estática"]="🚴";
   const nombresImp=Object.keys(vistos);
   impsCont.innerHTML = nombresImp.length
@@ -1144,7 +1296,7 @@ function renderHoy(){
 
   // Ejercicios de fuerza
   ejDia.forEach(id=>{
-    const e=EJERCICIOS[id];
+    const e=EJ(id);
     const r=rango(e);
     const ns=numSeries(id);
     const arr=ses.sets[id] || (ses.sets[id]=Array(ns).fill(false));
@@ -1374,7 +1526,7 @@ function vaciarDia(){
 }
 /* ===== Acciones rápidas por ejercicio ===== */
 function completarEjercicio(id){
-  const e=EJERCICIOS[id]; if(!e) return;
+  const e=EJ(id); if(!e) return;
   const iso=isoDeDia(diaVista);
   const snap=snapDia(iso);
   const ses=getSesion(diaVista);
@@ -1410,7 +1562,7 @@ function quitarSerieDia(id){
 function colapsarEj(id){ expandidos.delete(id); renderHoy(); }
 
 function repsPrevias(id, i){ // reps reales de tu última sesión con este ejercicio (no infla los datos)
-  const r=rango(EJERCICIOS[id]);
+  const r=rango(EJ(id));
   if(r.tiempo) return r.low;
   const hoy=isoDeDia(diaVista);
   const fechas=Object.keys(D.sesiones).sort().reverse();
@@ -1428,7 +1580,7 @@ function repsPrevias(id, i){ // reps reales de tu última sesión con este ejerc
 }
 function marcarSet(id, i){
   const ses=getSesion(diaVista);
-  const e=EJERCICIOS[id], r=rango(e), ns=numSeries(id);
+  const e=EJ(id), r=rango(e), ns=numSeries(id);
   const arr=ses.sets[id] || (ses.sets[id]=Array(ns).fill(false));
   while(arr.length<ns) arr.push(false);
 
@@ -1483,7 +1635,7 @@ function resetSet(id, i){
 }
 function ajustarRep(id, i, delta){
   const ses=getSesion(diaVista);
-  const e=EJERCICIOS[id], r=rango(e);
+  const e=EJ(id), r=rango(e);
   const arr=ses.sets[id] || (ses.sets[id]=Array(numSeries(id)).fill(false));
   let v = numVal(arr[i], r) + delta;
   if(v<1){ arr[i]=false; mediaSerie.delete(claveLado(id,i)); guardar(); renderHoy(); return; } // baja de 1 rep → la serie vuelve a estar sin marcar
@@ -1563,7 +1715,7 @@ function setCargaDelta(id, delta){
   if(v>0){ setCarga(id, v); if(prev) prev.innerHTML=`última: <b>${v} kg</b>`; vibrar(6); }
 }
 function registrarCargaSiHay(id){
-  if(!EJERCICIOS[id].carga) return;
+  if(!EJ(id).carga) return;
   const kg=D.ultCarga[id];
   if(!kg) return;
   if(!D.cargas[id]) D.cargas[id]=[];
@@ -1642,7 +1794,7 @@ function timerStop(){ clearInterval(timerInt); timerInt=null; timerDone=null; wl
 
 /* Aguante (plancha): al iniciar, cuenta regresiva para saber cuándo parar */
 function iniciarAguante(id){
-  const e=EJERCICIOS[id];
+  const e=EJ(id);
   const seg=segAguante(e);
   if(seg<=0) return;
   const r=rango(e), ns=numSeries(id);
@@ -1684,8 +1836,9 @@ function diaDe(id){
   return "";
 }
 function nuevosHtml(ids){
-  return ids.map(id=>{
-    const e=EJERCICIOS[id];
+  // En Dios Griego varios de estos ya están activos o no forman parte del plan: no se anuncian
+  return ids.filter(id=>EN_PLAN.has(id) && !ejActivo(id, hoyISO())).map(id=>{
+    const e=EJ(id);
     const carga = e.ini ? ` · ${e.ini}` : "";
     return `<span class="nvo">⭐ <b>${e.n}</b> · ${diaDe(id)}<br>`+
       `<span class="det">${e.s}×${e.r} · pausa ${e.p} s · ${e.imp}${carga}</span></span>`;
@@ -1734,7 +1887,8 @@ function renderCiclos(){
       cuerpo=`Fecha estimada si progresas a tiempo (8 semanas después de la anterior).`;
     }
     if(nuevos){
-      cuerpo+=`<br><b>Ejercicios que se suman ese día</b> — ${nuevos.motivo}:${nuevosHtml(nuevos.ids)}`;
+      const html=nuevosHtml(nuevos.ids);
+      if(html) cuerpo+=`<br><b>Ejercicios que se suman ese día</b> — ${nuevos.motivo}:${html}`;
     }
     card.innerHTML=`
       <div class="c-head">
@@ -1791,7 +1945,7 @@ function statsSemana(ini, fin){
     const ses=D.sesiones[iso], ds=d.getDay(), sets=ses.sets||{};
     let algo=false;
     for(const id in sets){
-      const e=EJERCICIOS[id]; if(!e) continue;
+      const e=EJ(id); if(!e) continue;
       const r=rango(e), lados=porLado(e)?2:1;
       const kg=e.carga ? cargaEnFecha(id, iso) : null;
       (sets[id]||[]).forEach(v=>{
@@ -1802,7 +1956,7 @@ function statsSemana(ini, fin){
       });
     }
     if(PLAN[ds] && sesionCompleta(ds, ses, iso)) sesiones++;
-    if(ses.cardio){ cardioMin+=(ses.cardioMin!=null&&ses.cardioMin>0)?ses.cardioMin:((PLAN[ds]&&PLAN[ds].cardio)||CARDIO_MIN_DEF); algo=true; }
+    if(ses.cardio){ const pd=planDe(ds, ses); cardioMin+=(ses.cardioMin!=null&&ses.cardioMin>0)?ses.cardioMin:((pd&&pd.cardio)||CARDIO_MIN_DEF); algo=true; }
     if(ses.rpe){ rpeSum+=ses.rpe; rpeN++; }
     if(algo) dias++;
   }
@@ -2020,7 +2174,7 @@ function e1rmSemanal(id, sem){
 }
 function ejesConE1rm(){       // ejercicios con carga y suficiente historial real
   return Object.keys(EJERCICIOS)
-    .filter(id=>EJERCICIOS[id].carga && ejActivo(id, hoyISO()))
+    .filter(id=>EJ(id).carga && ejActivo(id, hoyISO()))
     .map(id=>({id, n:e1rmHist(id).length}))
     .filter(x=>x.n>=2)
     .sort((a,b)=>b.n-a.n)
@@ -2049,7 +2203,7 @@ function renderGraficos(){
 
   const ejes1rm=pref('e1rm')?ejesConE1rm():[];
   const cols=[TC('--mint'), TC('--amber'), TC('--chart-trend'), TC('--danger')];
-  const leyenda1rm=ejes1rm.map((id,k)=>`<span><i style="background:${cols[k%4]}"></i>${EJERCICIOS[id].n}</span>`).join("");
+  const leyenda1rm=ejes1rm.map((id,k)=>`<span><i style="background:${cols[k%4]}"></i>${EJ(id).n}</span>`).join("");
   const hayRpe=sem.some(s=>s.rpe!=null);
 
   const barras=(clave)=>sem.map(s=>({lbl:s.lbl, v:s[clave]||0}));
@@ -2081,7 +2235,7 @@ function renderGraficos(){
   graficoBarras("gSeries", 170, barras("series"), {padL:30, entero:true});
   graficoBarras("gSes", 160, barras("sesiones"), {meta:6, metaTxt:"meta 6", padL:24, minMax:6, entero:true});
   if(ejes1rm.length) graficoLineas("g1rm", 180,
-    ejes1rm.map((id,k)=>({n:EJERCICIOS[id].n, color:cols[k%4], vals:e1rmSemanal(id, sem)})),
+    ejes1rm.map((id,k)=>({n:EJ(id).n, color:cols[k%4], vals:e1rmSemanal(id, sem)})),
     labels, {padL:34, fmtY:v=>Math.round(v)});
   graficoBarras("gCardio", 160, barras("cardioMin"), {padL:30, meta:150, metaTxt:"150 min", entero:true});
   if(hayRpe) graficoLineas("gRpe", 150, [{n:"RPE", color:TC('--amber'), vals:sem.map(s=>s.rpe)}],
@@ -2116,7 +2270,7 @@ function renderProg(){
 
   const cont=document.getElementById("listaProg"); cont.innerHTML="";
   Object.keys(EJERCICIOS).filter(id=>ejActivo(id, hoyISO())).forEach(id=>{
-    const e=EJERCICIOS[id], kg=esKg(id);
+    const e=EJ(id), kg=esKg(id);
     const sug=pref('sugerencias')?sugerencia(id):null;
     const card=document.createElement("div");
     card.className="prog-ej";
@@ -2448,8 +2602,8 @@ function setRpe(v){
 /* ----- 1RM estimado (fórmula de Epley: 1RM = peso × (1 + reps/30)) ----- */
 function epley(kg, reps){ return kg*(1+reps/30); }
 function e1rmHist(id){
-  if(!EJERCICIOS[id] || !EJERCICIOS[id].carga) return [];
-  const r=rango(EJERCICIOS[id]); const out=[];
+  if(!EJ(id) || !EJ(id).carga) return [];
+  const r=rango(EJ(id)); const out=[];
   Object.keys(D.sesiones).sort().forEach(iso=>{
     const ses=D.sesiones[iso]; if(!ses || ses._seed) return;
     const arr=(ses.sets && ses.sets[id])||[]; if(!arr.length) return;
@@ -2486,10 +2640,10 @@ function progDates(){
   return s;
 }
 function diaExcede(ses, diaSem, iso){
-  const plan=PLAN[diaSem]; if(!plan) return false;
-  const ejs=plan.ej.filter(id=>ejActivo(id, iso));
+  const plan=planDe(diaSem, ses); if(!plan) return false;
+  const ejs=plan.ej.filter(id=>ejActivoEn(id, iso, ses));
   for(const id of ejs){
-    const r=rango(EJERCICIOS[id]); const arr=(ses.sets && ses.sets[id])||[];
+    const r=rango(EJ(id)); const arr=(ses.sets && ses.sets[id])||[];
     if(arr.some(v=>numVal(v,r)>r.high)) return true;          // superó el tope de reps del rango
     if(arr.filter(hecho).length>numSeries(id)) return true;   // hizo series de más
   }
@@ -2682,6 +2836,63 @@ function renderTemas(){
   }).join("")+'</div>';
 }
 
+/* ----- Selector de rutina ----- */
+const DIAS_ORDEN=[1,2,3,4,5,6,0];
+const DIAS_ABR={0:"DOM",1:"LUN",2:"MAR",3:"MIÉ",4:"JUE",5:"VIE",6:"SÁB"};
+/* Resumen de un día resuelto con los ajustes de ESA rutina (no la activa) */
+function resumenPlan(rk, diaSem){
+  const r=RUTINAS[rk], p=r.plan[diaSem], iso=hoyISO();
+  let series=0, nej=0;
+  p.ej.forEach(id=>{
+    const base=EJERCICIOS[id]; if(!base) return;
+    const m=r.mods && r.mods[id];
+    const desde=(m && ("desde" in m)) ? m.desde : base.desde;
+    if(desde && iso<desde) return;
+    series += (m && m.s!=null) ? m.s : base.s;
+    nej++;
+  });
+  return {nej, series, cardio:p.cardio, titulo:p.titulo, foco:p.foco};
+}
+function setRutina(k){
+  if(!RUTINAS[k] || k===rutinaKey()) return;
+  if(!D.prefs) D.prefs={};
+  D.prefs.rutina=k;
+  tocarPref("rutina");
+  aplicarRutina();
+  expandidos.clear();
+  cheeredDia=null;
+  guardar();
+  renderRutinas();
+  refrescarVista();
+  toast("Rutina activa: "+RUTINAS[k].n+" ✓");
+}
+function renderRutinas(){
+  const box=document.getElementById("rutinasBox"); if(!box) return;
+  const cur=rutinaKey();
+  const intro=`<div class="nota">Cambia de rutina cuando quieras: <b>no se borra nada</b>. Tus pesos, cargas y sesiones registradas se conservan y cada sesión guarda con qué rutina la hiciste.</div>`;
+  box.innerHTML = intro + Object.keys(RUTINAS).map(k=>{
+    const r=RUTINAS[k], sel=k===cur;
+    const dias=DIAS_ORDEN.map(d=>{
+      const s=resumenPlan(k, d);
+      const nom=s.titulo.split("·")[1] ? s.titulo.split("·")[1].trim() : s.titulo;
+      const partes=[];
+      if(s.series>0) partes.push(s.series+" series");
+      if(s.cardio>0) partes.push(s.cardio+" min bici");
+      const descanso=partes.length===0;
+      return `<div class="rut-dia${descanso?" off":""}">`+
+        `<span class="dd">${DIAS_ABR[d]}</span>`+
+        `<span class="dt">${esc(nom)}</span>`+
+        `<span class="ds">${descanso?"—":esc(partes.join(" · "))}</span></div>`;
+    }).join("");
+    return `<button class="rut-card ${sel?"sel":""}" onclick="setRutina('${k}')" aria-pressed="${sel}">`+
+      `<span class="rut-head"><span class="rut-n">${esc(r.n)}</span>`+
+      (sel?`<span class="rut-badge">Activa</span>`:"")+`</span>`+
+      `<span class="rut-et">${esc(r.et)}</span>`+
+      `<span class="rut-d">${esc(r.d)}</span>`+
+      `<span class="rut-dias">${dias}</span></button>`;
+  }).join("");
+}
+
 /* ----- Preferencias: panel de switches ----- */
 const PREFS_LISTA=[
   ["medidas","Medidas corporales","Pecho, cadera, brazo y muslo en la vista Peso"],
@@ -2742,7 +2953,7 @@ function exportarPesosCSV(){
 function exportarCargasCSV(){
   let csv="ejercicio;fecha;carga_kg\n"; let filas=0;
   Object.keys(D.cargas||{}).forEach(id=>{
-    (D.cargas[id]||[]).forEach(x=>{ csv+=`${EJERCICIOS[id].n};${x.d};${numCL(x.kg)}\n`; filas++; });
+    (D.cargas[id]||[]).forEach(x=>{ csv+=`${EJ(id).n};${x.d};${numCL(x.kg)}\n`; filas++; });
   });
   if(!filas){ toast("Aún no registras cargas"); return; }
   descargar("cargas-"+hoyISO()+".csv", "﻿"+csv, "text/csv;charset=utf-8");
@@ -2809,6 +3020,7 @@ function renderDatos(){
     `${D.pesos.length} pesajes · ${sesiones} sesiones · ${cargas} cargas registradas` +
     (enClaude() ? " · guardado en Claude" : " · guardado en este navegador");
   renderTemas();
+  renderRutinas();
   renderPrefs();
   renderSync();
 }
@@ -2926,6 +3138,7 @@ function fusionar(base, extra){
     if(r.nota && (newer || !L.nota)) L.nota=r.nota;
     if(r.rpe!=null && (newer || L.rpe==null)) L.rpe=r.rpe;
     L.warmup = L.warmup || !!r.warmup;
+    if(r.rutina && (newer || !L.rutina)) L.rutina=r.rutina;
     const rs=r.sets||{};
     for(const ej in rs){
       const ra=rs[ej]||[], la=L.sets[ej]||[], len=Math.max(ra.length, la.length), out=[];
@@ -3069,7 +3282,8 @@ function desconectarSupa(){
 
 /* --- UI --- */
 function refrescarVista(){
-  pintarTema(); // por si el tema cambió en otro dispositivo (sync)
+  pintarTema();     // por si el tema cambió en otro dispositivo (sync)
+  aplicarRutina();  // idem con la rutina activa
   if(vistaActual==="Hoy") renderHoy();
   else if(vistaActual==="Prog") renderProg();
   else if(vistaActual==="Peso") renderPeso();
