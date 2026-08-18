@@ -556,7 +556,7 @@ const EJERCICIOS = {
   press:{n:"Press suelo mancuernas", imp:"Mancuernas", s:3, r:"10", p:75, tip:"Pausa breve en el suelo", v:"https://youtu.be/6kALZikXxLc", carga:true},
   ftri:{n:"Flexiones tríceps (tabla verde)", imp:"Tabla push-up + mochila con peso", s:3, r:"8–10", p:75, tip:"Codos cerrados · mochila bien ajustada", v:"https://youtu.be/0326dy_-CzM", carga:true, lastre:true, bw:0.64},
   exttri:{n:"Extensión tríceps overhead", imp:"Mancuerna", s:4, r:"12–15", p:60, tip:"Codo fijo", v:"https://youtu.be/YbX7Wd8jQ-Q", carga:true},
-  plancha:{n:"Plancha", imp:"Peso corporal", s:3, r:"60 s", p:30, tip:"Ombligo adentro", v:"https://youtu.be/ASdvN_XEl_c", carga:false},
+  plancha:{n:"Plancha", imp:"Peso corporal + mochila con peso", s:3, r:"60 s", p:30, tip:"Ombligo adentro · mochila baja, sobre la zona lumbar-media", v:"https://youtu.be/ASdvN_XEl_c", carga:true, lastre:true, bw:0.55},
   // Miércoles — Tirón
   remoZ:{n:"Remo barra Z", imp:"Barra Z", s:4, r:"8–10", p:90, tip:"Espalda neutra", v:"https://youtu.be/vT2GjY_Umpw", carga:true},
   remo1:{n:"Remo mancuerna 1 brazo", imp:"Mancuerna", s:3, r:"10 c/l", p:75, tip:"Pausa arriba", v:"https://youtu.be/pYcpY20QaE8", carga:true},
@@ -606,7 +606,7 @@ const TECNICA = {
   press:["Espalda, cabeza y ambos pies apoyados","Baja hasta que los codos toquen suave el suelo, pausa 1 s, sube sin rebotar","Muñecas rectas sobre los codos","<b>Error común:</b> arquear la lumbar para empujar más"],
   ftri:["Manos juntas bajo el pecho (agarre estrecho)","Codos pegados al cuerpo durante todo el recorrido","Baja lento; el tríceps trabaja en la bajada también","<b>Mochila:</b> con agarre estrecho usa menos kilos que en la flexión de pecho (el tríceps es más chico)"],
   exttri:["Mancuerna sobre la cabeza tomada con ambas manos","Solo se mueve el antebrazo: el codo queda fijo apuntando arriba","No dejes que los codos se abran hacia afuera","<b>Error común:</b> arquear la espalda al bajar el peso"],
-  plancha:["Antebrazos justo bajo los hombros","Aprieta glúteos y abdomen; ombligo adentro","Ni cola arriba ni lumbar caída: línea recta de cabeza a talones","Respira normal, no aguantes el aire"],
+  plancha:["Antebrazos justo bajo los hombros","Aprieta glúteos y abdomen; ombligo adentro","Ni cola arriba ni lumbar caída: línea recta de cabeza a talones","Respira normal, no aguantes el aire","<b>Mochila:</b> apoyada baja, entre la zona lumbar y media de la espalda; si la pones alta te empuja los hombros y pierdes la línea","<b>Mochila:</b> mejor que te la pase alguien o déjala puesta desde antes; no la acomodes en pleno aguante","<b>Error común:</b> con lastre la cadera cae primero: si se hunde, corta la serie ahí, no aguantes de más"],
   remoZ:["Bisagra de cadera: torso inclinado ~45°, espalda neutra","Lleva la barra hacia el ombligo, no al pecho","Aprieta las escápulas 1 s arriba","<b>Error común:</b> dar impulso con el torso"],
   remo1:["Mano y rodilla apoyadas en la silla; espalda plana como mesa","Codo pegado al cuerpo, sube la mancuerna hacia la cadera","Pausa 1 s arriba; baja en 2–3 s","<b>Error común:</b> rotar el torso para subir más peso"],
   fesp:["Escápulas activas: júntalas atrás antes de cada repetición","Rango completo y controlado","No encojas los hombros hacia las orejas","<b>Mochila:</b> si la carga te impide juntar bien las escápulas, baja los kilos: acá manda el rango, no el peso"],
@@ -876,7 +876,7 @@ function limpiarLados(id){
 const DEFAULT_INC = { press:2, remoZ:2, remo1:2, exttri:1, curl:1, pull:1, latr:1, sent:2.5, zanc:2.5, pmr:2.5, puente:2.5,
   phom:1, gem:2.5, bulg:2, martillo:1,
   // Lastre en mochila: sube de a poco, el salto real es mayor de lo que parece
-  fpecho:2.5, fpies:2.5, ftri:1, fesp:1, fhom:1 };
+  fpecho:2.5, fpies:2.5, ftri:1, fesp:1, fhom:1, plancha:2.5 };
 function rango(e){
   const s=String(e.r);
   const mt=s.match(/(\d+)\s*s/i);
@@ -927,7 +927,10 @@ function notaLastre(id){
   const pct=Math.round(factorBW(id)*100);
   if(bw==null) return `🎒 Anota <b>sólo</b> los kg que lleva la mochila; el resto lo pone tu peso corporal.`;
   const ef=Math.round((bw*factorBW(id)+(lastre||0))*10)/10;
-  return `🎒 Anota <b>sólo</b> los kg de la mochila. Con tu peso actual (${numCL(bw)} kg) mueves ≈ <b>${numCL(ef)} kg</b> por repetición: ${pct}% del cuerpo + lastre.`;
+  const iso2=rango(EJERCICIOS[id]).tiempo;
+  return `🎒 Anota <b>sólo</b> los kg de la mochila. Con tu peso actual (${numCL(bw)} kg) `+
+    (iso2 ? `sostienes ≈ <b>${numCL(ef)} kg</b>: ${pct}% del cuerpo + lastre. Primero llega al tope de segundos, después sube la mochila.`
+          : `mueves ≈ <b>${numCL(ef)} kg</b> por repetición: ${pct}% del cuerpo + lastre.`);
 }
 function incremento(id){ return (D.incremento&&D.incremento[id]!=null)?D.incremento[id]:(DEFAULT_INC[id]||1); }
 // última fecha en que TODAS las series llegaron al tope del rango
@@ -985,8 +988,9 @@ function sugerencia(id){
       if(esLastre(id)){
         const ef=cargaEfectiva(id, hoyISO());
         const pct=ef ? " ≈ +"+(Math.round(incremento(id)/ef*1000)/10).toString().replace(".",",")+"% de carga real" : "";
+        const piso=rango(EJERCICIOS[id]).tiempo ? "de segundos" : "de reps";
         return {ready:perf, origen:"perf", tipo:"kg", nuevo,
-          texto:`tope del rango en 2 sesiones seguidas: sube el lastre de la mochila a <b>${nuevo} kg</b> (+${incremento(id)} kg${pct}) y vuelve al piso del rango de reps`};
+          texto:`tope del rango en 2 sesiones seguidas: sube el lastre de la mochila a <b>${nuevo} kg</b> (+${incremento(id)} kg${pct}) y vuelve al piso del rango ${piso}`};
       }
       return {ready:perf, origen:"perf", tipo:"kg", nuevo,
         texto:`tope del rango en 2 sesiones seguidas: sube la carga a <b>${nuevo} kg</b> (+${incremento(id)} ≈ 2,5–5%) y vuelve al piso del rango de reps`};
@@ -1094,7 +1098,7 @@ function descargaHtml(id){
   if(necesitaDescarga(id)){
     const nuevo=cargaDescarga(id);
     const destino = esLastre(id)
-      ? (nuevo===0 ? "saca la mochila y hazlas <b>a peso corporal</b>" : `baja la mochila a <b>${nuevo} kg</b>`)
+      ? (nuevo===0 ? "saca la mochila y trabaja <b>a peso corporal</b>" : `baja la mochila a <b>${nuevo} kg</b>`)
       : `baja a <b>${nuevo} kg</b>`;
     return `<div class="desc-sug">🔄 <b>2 ciclos sin llegar al tope del rango.</b> La ciencia sugiere una descarga: ${destino} (−7,5% de la carga real) por 1 semana y vuelve a subir con más impulso.
       <div class="row2" style="margin-top:8px">
@@ -1832,9 +1836,10 @@ function renderCiclos(){
     más respaldado. Las revisiones estructuradas del plan se recomiendan cada <b>4–8 semanas</b> (mesociclo) y
     variar o sumar ejercicios cada <b>8–12 semanas</b> para evitar estancamiento; tu ritmo de 8 semanas está dentro
     de lo recomendado. Si una serie no progresa en 2 ciclos, considera bajar 5–10% la carga una semana (descarga) y volver a subir.
-    <br><br>🎒 <b>Flexiones con mochila:</b> en una flexión plana levantas ≈<b>64%</b> de tu peso corporal y con los pies elevados o en pica ≈<b>70%</b>
-    (Ebben et al., 2011). Por eso la app suma tu peso a los kilos de la mochila para el tonelaje y el 1RM estimado: agregar 2,5 kg de lastre
-    es ~5% más carga, no un salto enorme. Súbelo de a poco y sólo cuando llegues al tope del rango de reps con técnica limpia.`;
+    <br><br>🎒 <b>Ejercicios con mochila:</b> en una flexión plana levantas ≈<b>64%</b> de tu peso corporal, con los pies elevados o en pica ≈<b>70%</b>
+    (Ebben et al., 2011) y en la plancha sostienes ≈<b>55%</b>. Por eso la app suma tu peso a los kilos de la mochila para el tonelaje y el 1RM estimado:
+    agregar 2,5 kg de lastre es ~5% más carga, no un salto enorme. Súbelo de a poco y sólo cuando llegues al tope del rango con técnica limpia
+    —en la plancha, primero los segundos; el peso después.`;
   cont.appendChild(nota);
 }
 /* ===== Tonelaje semanal (kg totales movidos = carga × reps) ===== */
@@ -2221,7 +2226,7 @@ function renderProg(){
       let efHtml="";
       if(esLastre(id)){
         const ef=cargaEfectiva(id, hoyISO());
-        if(ef) efHtml=`<div class="h-row"><span>Carga real (${Math.round(factorBW(id)*100)}% del cuerpo + mochila)</span><b>≈ ${numCL(ef)} kg</b></div>`;
+        if(ef) efHtml=`<div class="h-row"><span>${rango(e).tiempo?"Carga sostenida":"Carga real"} (${Math.round(factorBW(id)*100)}% del cuerpo + mochila)</span><b>≈ ${numCL(ef)} kg</b></div>`;
       }
       let e1rmHtml="";
       if(pref('e1rm')){ const rz=e1rmResumen(id); if(rz) e1rmHtml=`<div class="h-row"><span>1RM estimado (Epley)</span><b>${rz.actual} kg · récord ${rz.rec} kg</b></div>`; }
@@ -2534,7 +2539,9 @@ function setRpe(v){
 function epley(kg, reps){ return kg*(1+reps/30); }
 function e1rmHist(id){
   if(!EJERCICIOS[id] || !EJERCICIOS[id].carga) return [];
-  const r=rango(EJERCICIOS[id]); const out=[];
+  const r=rango(EJERCICIOS[id]);
+  if(r.tiempo) return [];                     // en aguantes (plancha) Epley no aplica: son segundos, no reps
+  const out=[];
   Object.keys(D.sesiones).sort().forEach(iso=>{
     const ses=D.sesiones[iso]; if(!ses || ses._seed) return;
     const arr=(ses.sets && ses.sets[id])||[]; if(!arr.length) return;
