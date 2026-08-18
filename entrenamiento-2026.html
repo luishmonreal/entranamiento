@@ -375,6 +375,47 @@
   @media (prefers-reduced-motion: reduce){
     .set-pill.pop,.set-chip.flash,.prog-fill.cheer{animation:none;}
   }
+
+  /* ===== Ergonomía táctil, foco y zoom (auditoría UI/UX) =====
+     Va al final para ganarle por orden a las reglas de arriba sin tocarlas.
+     Objetivo: botones cómodos de apretar en pleno entrenamiento, foco visible
+     para teclado y campos que no disparen el zoom automático de iOS. */
+
+  /* iOS hace zoom al enfocar un campo con fuente < 16px: piso de 16 */
+  input[type="number"], input[type="text"], input[type="date"], textarea, select{
+    font-size:max(16px, var(--fs-md));}
+  .inc-in{font-size:max(16px, var(--fs-sm)); width:74px;}
+  .code-in{font-size:max(16px, var(--fs-sm));}
+  .nota-ses{font-size:max(16px, var(--fs-sm));}
+
+  /* Área de toque de 44px en los controles chicos */
+  .carga{flex-wrap:wrap;}
+  .carga .mini-kg{width:44px; height:44px;}
+  .int-chip, .med-chip{min-height:44px;}
+  .acc-btn{padding:13px 10px;}
+  .rpe-range{height:44px;}
+  .tec-btn{padding:12px 0 6px;}
+  .row-x{padding:14px 16px;}
+  .peso-form button{min-height:44px;}
+  input[type="number"], input[type="date"]{min-height:44px;}
+  /* Con la fuente a 16px los tres campos no caben en 375 px: el botón baja a
+     su propia línea (y de paso queda más fácil de apretar) en vez de cortar texto. */
+  .peso-form{flex-wrap:wrap;}
+  .peso-form input[type="number"]{flex:1 1 120px; min-width:120px;}
+  .peso-form button{flex:1 1 auto;}
+  .fecha-in{flex:0 0 148px; width:148px;}
+  /* Estos dos crecen sólo el área sensible, sin mover el diseño */
+  .ej-video, .switch{position:relative;}
+  .ej-video::after{content:""; position:absolute; left:0; right:0; top:50%;
+    height:44px; transform:translateY(-50%);}
+  .switch::after{content:""; position:absolute; inset:-7px -4px;}
+
+  /* Foco visible para teclado (WCAG 2.4.7 / 2.4.11) */
+  a:focus-visible, button:focus-visible, input:focus-visible,
+  select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible{
+    outline:3px solid var(--mint); outline-offset:2px;}
+  .nota-ses:focus-visible{outline:3px solid var(--mint); outline-offset:2px;
+    border-color:var(--mint);}
 </style>
 </head>
 <body>
@@ -2656,15 +2697,15 @@ const TEMAS={
     "--on-accent":"#04141F","--on-amber":"#251A02","--tabs-bg":"#070D18","--hm-lp":"#16394C","--chart-trend":"#A78BFA"})},
   amanecer:{n:"Amanecer", d:"claro y cálido, acento coral", v:temaV({
     "--bg":"#FAF6F0","--card":"#FFFFFF","--card2":"#F2EDE4","--line":"#E6DFD2","--text":"#2B2620","--muted":"#6E6357",
-    "--mint":"#E85D3D","--mint-dark":"#C24326","--amber":"#2A9D8F","--danger":"#C0392B",
+    "--mint":"#C63818","--mint-dark":"#C24326","--amber":"#1F756A","--danger":"#C0392B",
     "--on-accent":"#FFFFFF","--on-amber":"#FFFFFF","--tabs-bg":"#FFFFFF","--hm-lp":"#F3C5B8","--chart-trend":"#7C6FD0"})},
   neon:{n:"Neón nocturno", d:"púrpura + magenta, synthwave", v:temaV({
     "--bg":"#120820","--card":"#1C1032","--card2":"#261743","--line":"#38255E","--text":"#F3EDFC","--muted":"#A392C4",
     "--mint":"#E879F9","--mint-dark":"#9C3FB0","--amber":"#22D3EE","--danger":"#FB7185",
     "--on-accent":"#1B0625","--on-amber":"#042A30","--tabs-bg":"#0C0516","--hm-lp":"#4A2560","--chart-trend":"#8B5CF6"})},
   tinta:{n:"Tinta", d:"blanco minimal, un solo rojo", v:temaV({
-    "--bg":"#FFFFFF","--card":"#FFFFFF","--card2":"#F4F4F4","--line":"#E2E2E2","--text":"#141414","--muted":"#767676",
-    "--mint":"#DC2626","--mint-dark":"#B91C1C","--amber":"#141414","--danger":"#991B1B",
+    "--bg":"#FFFFFF","--card":"#FFFFFF","--card2":"#F4F4F4","--line":"#E2E2E2","--text":"#141414","--muted":"#6E6E6E",
+    "--mint":"#D52222","--mint-dark":"#B91C1C","--amber":"#141414","--danger":"#991B1B",
     "--on-accent":"#FFFFFF","--on-amber":"#FFFFFF","--tabs-bg":"#FFFFFF","--hm-lp":"#F3C1C1","--chart-trend":"#2563EB"})},
   grafito:{n:"Grafito", d:"monocromo oscuro, sobrio", v:temaV({
     "--bg":"#101113","--card":"#191B1E","--card2":"#222529","--line":"#2F3339","--text":"#F2F3F5","--muted":"#9AA0A8",
@@ -2672,16 +2713,16 @@ const TEMAS={
     "--on-accent":"#101113","--on-amber":"#241C02","--tabs-bg":"#0B0C0D","--hm-lp":"#3B3F45","--chart-trend":"#6FB3FF"})},
   fuego:{n:"Fuego", d:"rojo intenso, espíritu de box", v:temaV({
     "--bg":"#140B0B","--card":"#1F1212","--card2":"#2A1818","--line":"#3B2424","--text":"#F7EEEC","--muted":"#B09A96",
-    "--mint":"#F04438","--mint-dark":"#B22A20","--amber":"#F79009","--danger":"#F97066",
-    "--on-accent":"#FFFFFF","--on-amber":"#2A1602","--tabs-bg":"#0D0707","--hm-lp":"#4A2320","--chart-trend":"#74CAFF"})},
+    "--mint":"#F0483D","--mint-dark":"#BB2C22","--amber":"#F79009","--danger":"#F97066",
+    "--on-accent":"#240B08","--on-amber":"#2A1602","--tabs-bg":"#0D0707","--hm-lp":"#4A2320","--chart-trend":"#74CAFF"})},
   oro:{n:"Oro negro", d:"negro + dorado, elegante", v:temaV({
     "--bg":"#0E0C08","--card":"#181510","--card2":"#221E16","--line":"#363023","--text":"#F5F0E4","--muted":"#A89E88",
     "--mint":"#E7C36A","--mint-dark":"#A98B34","--amber":"#E78A3C","--danger":"#E56A54",
     "--on-accent":"#1A1205","--on-amber":"#221000","--tabs-bg":"#090805","--hm-lp":"#40371F","--chart-trend":"#9CB4FF"})},
   sakura:{n:"Sakura", d:"claro rosado, suave y vivo", v:temaV({
     "--bg":"#FDF4F7","--card":"#FFFFFF","--card2":"#F7E9EF","--line":"#F0DAE3","--text":"#372B31","--muted":"#7C6472",
-    "--mint":"#EC4899","--mint-dark":"#C2337B","--amber":"#8B5CF6","--danger":"#DC2626",
-    "--on-accent":"#FFFFFF","--on-amber":"#FFFFFF","--tabs-bg":"#FFFFFF","--hm-lp":"#F6C8DD","--chart-trend":"#38BDF8"})},
+    "--mint":"#CD1570","--mint-dark":"#C2337B","--amber":"#7A44F4","--danger":"#DC2626",
+    "--on-accent":"#FFFFFF","--on-amber":"#FFFFFF","--tabs-bg":"#FFFFFF","--hm-lp":"#F6C8DD","--chart-trend":"#089EE1"})},
   terminal:{n:"Terminal", d:"retro hacker, verde fosforescente", v:temaV({
     "--bg":"#000000","--card":"#0A0F0A","--card2":"#101810","--line":"#1E2E1E","--text":"#C8FACC","--muted":"#5E8A62",
     "--mint":"#33FF66","--mint-dark":"#1E9940","--amber":"#FFB000","--danger":"#FF5555",
@@ -2689,7 +2730,7 @@ const TEMAS={
     "--font":FONT_MONO})},
   hielo:{n:"Hielo", d:"claro azulado, fresco y limpio", v:temaV({
     "--bg":"#F0F6FA","--card":"#FFFFFF","--card2":"#E5EEF5","--line":"#D7E3EC","--text":"#1E2A33","--muted":"#5C6C74",
-    "--mint":"#0284C7","--mint-dark":"#026395","--amber":"#0D9488","--danger":"#DC2626",
+    "--mint":"#0270A9","--mint-dark":"#026395","--amber":"#0A786E","--danger":"#DC2626",
     "--on-accent":"#FFFFFF","--on-amber":"#FFFFFF","--tabs-bg":"#FFFFFF","--hm-lp":"#BFDCEE","--chart-trend":"#7C6FD0"})},
 };
 function temaKey(){ const k=D && D.prefs && D.prefs.tema; return (k && TEMAS[k]) ? k : "bosque"; }
